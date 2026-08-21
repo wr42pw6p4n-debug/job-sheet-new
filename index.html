@@ -1,0 +1,226 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>R Key Engineering - Job Manager</title>
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="theme-color" content="#17232d">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<link rel="apple-touch-icon" href="icon-192.png">
+<style>
+*{box-sizing:border-box}body{margin:0;background:#eef1f4;color:#111;font-family:Arial,Helvetica,sans-serif}
+header{background:#17232d;color:#fff;padding:14px 18px;position:sticky;top:0;z-index:10}.head{max-width:1180px;margin:auto;display:flex;justify-content:space-between;align-items:center}
+h1{font-size:20px;margin:0}.wrap{max-width:1180px;margin:auto;padding:15px}.nav{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px}
+button{border:1px solid #c4ccd2;border-radius:7px;background:#fff;padding:10px 14px;font-weight:700;cursor:pointer}.primary{background:#1769aa;color:#fff;border-color:#1769aa}.danger{background:#b42318;color:#fff;border-color:#b42318}
+.card{background:#fff;border-radius:10px;padding:16px;margin-bottom:14px;box-shadow:0 1px 5px #0002}.hidden{display:none}.muted{color:#68747d;font-size:12px}
+.grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}.grid4{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+label{font-size:12px;font-weight:700;display:block;margin-bottom:4px}input,select,textarea{width:100%;font:inherit;padding:9px;border:1px solid #bdc6cd;border-radius:5px}textarea{min-height:90px;resize:vertical}
+.jobrow{display:flex;justify-content:space-between;align-items:center;gap:10px;border:1px solid #d5dce1;border-radius:8px;padding:12px;margin:7px 0}.pill{font-size:11px;border-radius:20px;padding:5px 8px;background:#e7f1fb;color:#145c8d;font-weight:700}
+hr{border:0;border-top:1px solid #d2d8dd;margin:18px 0}
+.sigcanvas{border:1px solid #222;border-radius:5px;background:#fff;width:100%;height:130px;touch-action:none}.sig-actions{margin-top:5px}
+.actions{display:flex;gap:7px;flex-wrap:wrap}.stat{display:inline-block;background:#f5f7f8;border:1px solid #d7dde1;border-radius:7px;padding:8px 10px;margin:3px;font-size:12px}
+.job-sheet{max-width:1000px;margin:auto;background:white;color:#000;padding:22px}
+.company{text-align:center;border:1px solid #111;padding:7px;font-size:10px;line-height:1.35}.company strong{font-size:14px}
+.title{border:2px solid #111;border-top:0;text-align:center;font-weight:bold;font-size:22px;padding:9px}
+.info{width:100%;border-collapse:collapse;margin-top:9px;font-size:11px}.info th,.info td{border:1px solid #111;padding:6px;vertical-align:top}.info th{background:#e8e8e8;text-align:left;width:18%}
+.section{background:#dedede;border:1px solid #111;border-bottom:0;font-size:11px;font-weight:bold;padding:6px;margin-top:9px}.box{border:1px solid #111;min-height:115px;padding:7px;font-size:11px;white-space:pre-wrap}
+.time th,.time td{text-align:center}.time input{border:0;padding:0;text-align:center;background:transparent}.time input:focus{outline:1px solid #1769aa}
+.cert{font-size:10px;border:1px solid #111;padding:7px;min-height:90px}.signprint{height:55px;border-bottom:1px solid #111;margin-top:4px}
+.footer{font-size:8px;text-align:center;margin-top:7px}
+@media(max-width:700px){.grid,.grid4{grid-template-columns:1fr}.jobrow{flex-direction:column;align-items:flex-start}.job-sheet{padding:10px}}
+@media print{body{background:#fff}.no-print,header{display:none!important}.wrap{padding:0;max-width:none}.card{box-shadow:none;padding:0;margin:0}.job-sheet{max-width:none;padding:6mm}@page{size:A4;margin:7mm}}
+</style>
+</head>
+<body>
+<header class="no-print"><div class="head"><h1>R Key Engineering — Job Manager</h1><span id="counter"></span></div></header>
+<div class="wrap">
+<div class="nav no-print">
+<button class="primary" onclick="newJob()">＋ New Job</button><button onclick="home()">Jobs</button><button onclick="customersPage()">Customers</button>
+</div>
+
+<section id="home" class="card no-print">
+<h2>Job Orders</h2>
+<div id="stats"></div>
+<input id="search" placeholder="Search job number, customer, site or engineer…" oninput="renderJobs()">
+<div id="jobList"></div>
+</section>
+
+<section id="form" class="card no-print hidden">
+<h2>New Job Order</h2>
+<div class="grid">
+<div><label>Job No.</label><input id="f_job" readonly></div>
+<div><label>Customer Order No.</label><input id="f_order"></div>
+<div><label>Customer / Company</label><input id="f_customer" list="customerOptions" oninput="customerChanged()"><datalist id="customerOptions"></datalist></div>
+<div><label>Type of Work</label><select id="f_type"></select></div>
+<div><label>Location / Site</label><input id="f_site"></div>
+<div><label>Site Contact(s)</label><input id="f_contact"></div>
+<div><label>Date</label><input id="f_date" type="date"></div>
+<div><label>Status</label><select id="f_status"><option>Open</option><option>In Progress</option><option>Complete</option></select></div>
+</div>
+<hr><h3>Engineer(s) in Attendance</h3>
+<div class="grid4">
+<div><label>Engineer 1</label><input id="e1" list="engineerOptions"></div><div><label>Engineer 2</label><input id="e2" list="engineerOptions"></div>
+<div><label>Engineer 3</label><input id="e3" list="engineerOptions"></div><div><label>Engineer 4</label><input id="e4" list="engineerOptions"></div>
+</div>
+<datalist id="engineerOptions"></datalist>
+<hr>
+<label>Report of Work Carried Out / Comments</label><textarea id="f_comments"></textarea>
+<hr>
+<h3>Time, Expenses & Mileage</h3>
+<div id="timeRows"></div>
+<button class="secondary" onclick="addTimeRow()">＋ Add Date</button>
+<hr>
+<h3>Materials</h3>
+<div id="matRows"></div>
+<button class="secondary" onclick="addMaterialRow()">＋ Add Material</button>
+<hr>
+<h3>Customer Certification</h3>
+<div class="muted">The work detailed above has been carried out to my complete satisfaction. I further agree that all times stated are correct.</div>
+<br><div class="grid"><div><label>Customer Name</label><input id="custName"></div><div><label>Position</label><input id="custPosition"></div></div>
+<br><label>Customer Signature — use your finger or Apple Pencil</label><canvas id="customerSig" class="sigcanvas"></canvas>
+<div class="sig-actions"><button onclick="clearSig('customerSig')">Clear signature</button></div>
+<hr>
+<label>Engineer Signature — use your finger or Apple Pencil</label><canvas id="engineerSig" class="sigcanvas"></canvas>
+<div class="sig-actions"><button onclick="clearSig('engineerSig')">Clear signature</button></div>
+<br>
+<div class="actions"><button class="primary" onclick="saveJob()">Save Job</button><button onclick="home()">Cancel</button></div>
+</section>
+
+<section id="customers" class="card no-print hidden"><h2>Customers</h2><div id="customerView"></div></section>
+<section id="detail" class="card hidden"></section>
+</div>
+
+<script>
+const SEED={"history": [], "customers": [], "engineers": [], "types": []};
+let jobs=[];
+try{jobs=JSON.parse(localStorage.getItem('rkey_jobs')||'[]');if(!Array.isArray(jobs))jobs=[]}catch(e){jobs=[]}
+let savedCustomers=[];
+try{savedCustomers=JSON.parse(localStorage.getItem('rkey_customers')||'[]');if(!Array.isArray(savedCustomers))savedCustomers=[]}catch(e){savedCustomers=[]}
+let customers=[...new Set([...savedCustomers,...SEED.customers])];
+let engineers=SEED.engineers;
+let types=[...new Set(['Repair','Service','Office Work','Test','Inspection','Survey','Delivery','Quotation','Installation','Crane build',...SEED.types])];
+let timeRows=[],matRows=[];
+function esc(v){return String(v??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]))}
+function hide(){['home','form','customers','detail'].forEach(x=>document.getElementById(x).classList.add('hidden'))}
+function home(){hide();document.getElementById('home').classList.remove('hidden');renderJobs()}
+function nextJob(){let n=jobs.map(j=>parseInt(j.job,10)).filter(Number.isFinite);return String((n.length?Math.max(...n):0)+1)}
+function setupLists(){customerOptions.innerHTML=customers.map(x=>`<option value="${esc(x)}"></option>`).join('');document.getElementById('engineerOptions').innerHTML=engineers.map(x=>`<option value="${esc(x)}"></option>`).join('');document.getElementById('f_type').innerHTML=types.map(x=>`<option>${esc(x)}</option>`).join('')}
+function newJob(){
+ hide();document.getElementById('form').classList.remove('hidden');setupLists();f_job.value=nextJob();f_date.value=new Date().toISOString().slice(0,10);
+ ['f_order','f_customer','f_site','f_contact','e1','e2','e3','e4','f_comments','custName','custPosition'].forEach(x=>document.getElementById(x).value='');
+ timeRows=[];matRows=[];renderTime();renderMaterials();clearSig('customerSig');clearSig('engineerSig');
+}
+function customerChanged(){
+ let c=document.getElementById('f_customer').value.trim();let old=jobs.find(j=>j.customer.toLowerCase()===c.toLowerCase()&&j.site);
+ if(old){document.getElementById('f_site').value=old.site;document.getElementById('f_contact').value=old.contact||''}
+}
+function addTimeRow(d='',nt='',ot='',dt='',mile='',eid=''){
+ timeRows.push({date:d||new Date().toISOString().slice(0,10),nt,ot,dt,mile,eid});renderTime()
+}
+function renderTime(){
+ let timeRowsEl=document.getElementById('timeRows');
+ timeRowsEl.innerHTML=timeRows.map((r,i)=>`<div class="grid4" style="margin-bottom:6px">
+ <div><label>Date</label><input type="date" value="${esc(r.date)}" onchange="timeRows[${i}].date=this.value"></div>
+ <div><label>N/T</label><input type="number" step=".25" value="${esc(r.nt)}" onchange="timeRows[${i}].nt=this.value"></div>
+ <div><label>O/T</label><input type="number" step=".25" value="${esc(r.ot)}" onchange="timeRows[${i}].ot=this.value"></div>
+ <div><label>D/T</label><input type="number" step=".25" value="${esc(r.dt)}" onchange="timeRows[${i}].dt=this.value"></div>
+ </div>`).join('');
+}
+function addMaterialRow(desc=''){matRows.push({desc});renderMaterials()}
+function renderMaterials(){
+ let matRowsEl=document.getElementById('matRows');
+ matRowsEl.innerHTML=matRows.map((r,i)=>`<div style="margin-bottom:6px"><input placeholder="Description / Material Used" value="${esc(r.desc)}" onchange="matRows[${i}].desc=this.value"></div>`).join('');
+}
+function saveJob(){
+ const v=id=>document.getElementById(id).value;
+ let j={
+  job:v('f_job'),order:v('f_order'),customer:v('f_customer'),site:v('f_site'),
+  contact:v('f_contact'),date:v('f_date'),status:v('f_status'),type:v('f_type'),
+  engineers:['e1','e2','e3','e4'].map(v).filter(Boolean),
+  comments:v('f_comments'),time:timeRows,materials:matRows.map(x=>x.desc).filter(Boolean),
+  customerName:v('custName'),customerPosition:v('custPosition'),
+  customerSig:document.getElementById('customerSig').toDataURL(),
+  engineerSig:document.getElementById('engineerSig').toDataURL(),
+  created:new Date().toISOString()
+ };
+ if(!j.customer){alert('Please enter the customer/company.');return}
+ jobs.push(j);
+ customers=[...new Set([...customers,j.customer])];
+ localStorage.setItem('rkey_jobs',JSON.stringify(jobs));
+ localStorage.setItem('rkey_customers',JSON.stringify(customers));
+ openJob(j.job);
+}
+function renderJobs(){
+ let q=(search.value||'').toLowerCase(),a=jobs.filter(j=>JSON.stringify(j).toLowerCase().includes(q)).sort((a,b)=>b.created.localeCompare(a.created));
+ document.getElementById('stats').innerHTML=`<span class="stat">Total: ${jobs.length}</span><span class="stat">Open: ${jobs.filter(x=>x.status==='Open').length}</span><span class="stat">Complete: ${jobs.filter(x=>x.status==='Complete').length}</span>`;
+ document.getElementById('jobList').innerHTML=a.length?a.map(j=>`<div class="jobrow"><div><b>Job ${esc(j.job)}</b> — ${esc(j.customer)}<div class="muted">${esc(j.site)} · ${esc(j.date)} · ${esc(j.type)}</div></div><div class="actions"><span class="pill">${esc(j.status)}</span><button onclick="openJob('${esc(j.job)}')">Open</button></div></div>`).join(''):'<p class="muted">No jobs yet. Tap New Job.</p>';
+ document.getElementById('counter').textContent=jobs.length+' jobs'
+}
+function customersPage(){hide();document.getElementById('customers').classList.remove('hidden');document.getElementById('customerView').innerHTML=customers.sort().map(c=>`<div class="jobrow"><b>${esc(c)}</b></div>`).join('');}
+function openJob(no){
+ let j=jobs.find(x=>x.job===no);if(!j)return;hide();document.getElementById('detail').classList.remove('hidden');
+ let total=0; (j.time||[]).forEach(r=>total+=(+r.nt||0)+(+r.ot||0)+(+r.dt||0));
+ let tr=(j.time||[]).map(r=>`<tr><td>${esc(r.date)}</td><td>${esc(r.nt||'')}</td><td>${esc(r.ot||'')}</td><td>${esc(r.dt||'')}</td><td>${((+r.nt||0)+(+r.ot||0)+(+r.dt||0)).toFixed(2)}</td><td>${esc(r.mile||'')}</td><td>${esc(j.engineers[0]||'')}</td></tr>`).join('');
+ let mats=(j.materials||[]).map(x=>`<div>${esc(x)}</div>`).join('');
+ document.getElementById('detail').innerHTML=`<div class="actions no-print" style="margin-bottom:12px">
+ <button onclick="home()">← Back</button><button class="primary" onclick="window.print()">🖨 Print / Save PDF</button>
+ <button onclick="emailJob('${esc(j.job)}')">✉ Email</button><button onclick="deleteJob('${esc(j.job)}')" class="danger">Delete</button></div>
+ <div class="job-sheet">
+ <div class="company"><strong>R KEY ENGINEERING</strong><br>The Bungalow, Whittington Lane, Unstone, Dronfield, S18 4DQ<br>
+ Overhead Cranes & Hoists ● Runways & Gantries ● Lifting Beams & Jib Cranes ● Crane Conversions & Repairs<br>
+ Site Installation ● Testing ● Site Surveys ● Crane Service & Inspection ● Spares<br>
+ Lifting Tackle Supplies & Inspection ● Fork Lift Truck Hire, Sales Services & Repair<br>
+ Tel/Fax: 01246 413524 &nbsp; Mobile: 07971 222574 &nbsp; Email: rkeyengineering@hotmail.co.uk</div>
+ <div class="title">JOB SHEET</div>
+ <table class="info">
+ <tr><th>Job No.</th><td>${esc(j.job)}</td><th>Customer Order No.</th><td>${esc(j.order)}</td></tr>
+ <tr><th>Customer/Company</th><td>${esc(j.customer)}</td><th>Engineer(s) in Attendance</th><td>${esc(j.engineers.join(', '))}</td></tr>
+ <tr><th>Location/Site</th><td>${esc(j.site)}</td><th>Date</th><td>${esc(j.date)}</td></tr>
+ <tr><th>Site Contact(s)</th><td>${esc(j.contact)}</td><th>Type of Work</th><td>${esc(j.type)}</td></tr>
+ </table>
+ <div class="section">REPORT OF WORK CARRIED OUT:</div><div class="box">${esc(j.comments||'')}</div>
+ <div class="section">TRAVELLING TIME, EXPENSES & MILEAGE WILL BE CHARGED EXTRA — MATERIALS</div>
+ <table class="info time"><tr><th>DATE</th><th>N/T</th><th>O/T</th><th>D/T</th><th>TOTAL</th><th>MILEAGE</th><th>Engineer ID No.</th></tr>
+ ${tr||'<tr><td colspan="7">&nbsp;</td></tr>'}<tr><th>TOTAL</th><th colspan="3"></th><th>${total.toFixed(2)}</th><th></th><th></th></tr></table>
+ <div class="section">Description / Material Used</div><div class="box">${mats||'&nbsp;'}</div>
+ <div class="section">ENGINEER'S SIGNATURE</div><div class="cert">${esc(j.engineers[0]||'')}<div class="signprint"></div></div>
+ <div class="section">CUSTOMER'S CERTIFICATION</div><div class="cert">The work detailed above has been carried out to my complete satisfaction. I further agree that all times stated are correct.<br><br>
+ Name: ${esc(j.customerName||'')} &nbsp;&nbsp; Position: ${esc(j.customerPosition||'')}<div class="signprint"></div>Customer Signature / Date</div>
+ <div class="footer">Job ${esc(j.job)} — R Key Engineering Job Sheet</div>
+ </div>`
+}
+function emailJob(no){
+ let j=jobs.find(x=>x.job===no);if(!j)return;
+ let subject=encodeURIComponent('Job Sheet '+j.job+' - '+j.customer);
+ let body=encodeURIComponent('Job Sheet '+j.job+'\\nCustomer: '+j.customer+'\\nSite: '+j.site+'\\nDate: '+j.date+'\\n\\nPlease attach the PDF generated using Print / Save PDF.');
+ location.href='mailto:?subject='+subject+'&body='+body;
+}
+function deleteJob(no){if(confirm('Delete this job?')){jobs=jobs.filter(x=>x.job!==no);localStorage.setItem('rkey_jobs',JSON.stringify(jobs));home()}}
+function canvasSetup(id){
+ const c=document.getElementById(id),ctx=c.getContext('2d');ctx.lineWidth=2;ctx.lineCap='round';
+ let down=false;function pos(e){let r=c.getBoundingClientRect(),p=e.touches?e.touches[0]:e;return{x:(p.clientX-r.left)*c.width/r.width,y:(p.clientY-r.top)*c.height/r.height}}
+ function start(e){e.preventDefault();down=true;let p=pos(e);ctx.beginPath();ctx.moveTo(p.x,p.y)}
+ function move(e){if(!down)return;e.preventDefault();let p=pos(e);ctx.lineTo(p.x,p.y);ctx.stroke()}
+ function end(){down=false}
+ c.addEventListener('pointerdown',start);c.addEventListener('pointermove',move);c.addEventListener('pointerup',end);c.addEventListener('pointerleave',end);
+}
+function clearSig(id){let c=document.getElementById(id);if(!c)return;let ctx=c.getContext('2d');ctx.clearRect(0,0,c.width,c.height)}
+function initCanvases(){
+ ['customerSig','engineerSig'].forEach(id=>{
+  let c=document.getElementById(id);
+  if(!c)return;
+  c.width=Math.max(300,c.clientWidth*2);
+  c.height=Math.max(130,c.clientHeight*2);
+  canvasSetup(id);
+ });
+}
+setupLists();renderJobs();setTimeout(initCanvases,100)
+</script>
+<script>
+if ("serviceWorker" in navigator) {
+  window.addEventListener("load", () => navigator.serviceWorker.register("./sw.js").catch(() => {}));
+}
+</script>
+</body></html>
