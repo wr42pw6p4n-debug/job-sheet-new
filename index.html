@@ -29,11 +29,38 @@ hr{border:0;border-top:1px solid #d2d8dd;margin:18px 0}
 .time th,.time td{text-align:center}.time input{border:0;padding:0;text-align:center;background:transparent}.time input:focus{outline:1px solid #1769aa}
 .cert{font-size:10px;border:1px solid #111;padding:7px;min-height:90px}.signprint{height:55px;border-bottom:1px solid #111;margin-top:4px}
 .footer{font-size:8px;text-align:center;margin-top:7px}
-@media(max-width:700px){.grid,.grid4{grid-template-columns:1fr}.jobrow{flex-direction:column;align-items:flex-start}.job-sheet{padding:10px}}
-@media print{body{background:#fff}.no-print,header{display:none!important}.wrap{padding:0;max-width:none}.card{box-shadow:none;padding:0;margin:0}.job-sheet{max-width:none;padding:6mm}@page{size:A4;margin:7mm}}
+.sig-label{font-weight:300}
+.custrow{display:flex;justify-content:space-between;align-items:center;gap:10px;border:1px solid #d5dce1;border-radius:8px;padding:12px;margin:7px 0;cursor:pointer}
+.custrow:hover{background:#f5f8fb}
+.custedit{border:1px solid #d5dce1;border-radius:8px;padding:12px;margin:7px 0;background:#f9fbfc}
+button[disabled]{opacity:.55;cursor:wait}
+@media(max-width:700px){.grid,.grid4{grid-template-columns:1fr}.jobrow,.custrow{flex-direction:column;align-items:flex-start}.job-sheet{padding:10px}}
+@media print{body{background:#fff}.no-print,header{display:none!important}.wrap{padding:0;max-width:none}.card{box-shadow:none;padding:0;margin:0}.job-sheet{max-width:none;padding:6mm;transform-origin:top left}@page{size:A4;margin:7mm}}
 </style>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script>
+// Loads a lib from a primary CDN, falling back to a mirror if the first is blocked/unreachable.
+// This is what actually fixes the PDF button — before, if one CDN failed to load, the button
+// stayed dead forever with no retry.
+function loadWithFallback(urls){
+ return new Promise(resolve=>{
+  let i=0;
+  (function tryNext(){
+   if(i>=urls.length){resolve(false);return}
+   let s=document.createElement('script');
+   s.src=urls[i++];s.crossOrigin='anonymous';
+   s.onload=()=>resolve(true);
+   s.onerror=tryNext;
+   document.head.appendChild(s);
+  })();
+ });
+}
+window.pdfLibsReady=(async()=>{
+ let ok1=await loadWithFallback(['https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js','https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js']);
+ let ok2=await loadWithFallback(['https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js','https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js']);
+ return ok1&&ok2;
+})();
+loadWithFallback(['https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js','https://cdnjs.cloudflare.com/ajax/libs/emailjs-browser/4.4.1/email.min.js']);
+</script>
 </head>
 <body>
 <header class="no-print"><div class="head"><h1>Key Engineering Chesterfield LTD — Job Manager</h1><span id="counter"></span></div></header>
@@ -55,6 +82,7 @@ hr{border:0;border-top:1px solid #d2d8dd;margin:18px 0}
 <div><label>Job No.</label><input id="f_job"></div>
 <div><label>Customer Order No.</label><input id="f_order"></div>
 <div><label>Customer / Company</label><input id="f_customer" list="customerOptions" oninput="customerChanged()"><datalist id="customerOptions"></datalist></div>
+<div><label>Customer Email</label><input id="f_email" type="email" placeholder="name@company.com"></div>
 <div><label>Type of Work</label><select id="f_type"></select></div>
 <div><label>Location / Site</label><input id="f_site"></div>
 <div><label>Site Contact(s)</label><input id="f_contact"></div>
@@ -81,16 +109,21 @@ hr{border:0;border-top:1px solid #d2d8dd;margin:18px 0}
 <h3>Customer Certification</h3>
 <div class="muted">The work detailed above has been carried out to my complete satisfaction. I further agree that all times stated are correct.</div>
 <br><div class="grid"><div><label>Customer Name</label><input id="custName"></div><div><label>Position</label><input id="custPosition"></div></div>
-<br><label>Customer Signature — use your finger or Apple Pencil</label><canvas id="customerSig" class="sigcanvas"></canvas>
+<br><label class="sig-label">Customer Signature — use your finger or Apple Pencil</label><canvas id="customerSig" class="sigcanvas"></canvas>
 <div class="sig-actions"><button onclick="clearSig('customerSig')">Clear signature</button></div>
 <hr>
-<label>Engineer Signature — use your finger or Apple Pencil</label><canvas id="engineerSig" class="sigcanvas"></canvas>
+<label class="sig-label">Engineer Signature — use your finger or Apple Pencil</label><canvas id="engineerSig" class="sigcanvas"></canvas>
 <div class="sig-actions"><button onclick="clearSig('engineerSig')">Clear signature</button></div>
 <br>
 <div class="actions"><button class="primary" onclick="saveJob()">Save Job</button><button onclick="home()">Cancel</button></div>
 </section>
 
-<section id="customers" class="card no-print hidden"><h2>Customers</h2><div id="customerView"></div></section>
+<section id="customers" class="card no-print hidden">
+<h2>Customers</h2>
+<div class="muted" style="margin-bottom:8px">Tap a customer to start a new job pre-filled with their details. Use ✎ to save their site, contact and email for next time.</div>
+<input id="custSearch" placeholder="Search customers…" oninput="renderCustomers()">
+<div id="customerView"></div>
+</section>
 <section id="detail" class="card hidden"></section>
 </div>
 
@@ -118,12 +151,28 @@ function nextJob(){let n=jobs.map(j=>parseInt(j.job,10)).filter(Number.isFinite)
 function setupLists(){customerOptions.innerHTML=customers.map(x=>`<option value="${esc(x)}"></option>`).join('');document.getElementById('engineerOptions').innerHTML=engineers.map(x=>`<option value="${esc(x)}"></option>`).join('');document.getElementById('f_type').innerHTML=types.map(x=>`<option>${esc(x)}</option>`).join('')}
 function newJob(){
  hide();document.getElementById('form').classList.remove('hidden');setupLists();f_job.value=nextJob();f_date.value=new Date().toISOString().slice(0,10);
- ['f_order','f_customer','f_site','f_contact','e1','e2','e3','e4','f_comments','custName','custPosition'].forEach(x=>document.getElementById(x).value='');
+ ['f_order','f_customer','f_email','f_site','f_contact','e1','e2','e3','e4','f_comments','custName','custPosition'].forEach(x=>document.getElementById(x).value='');
  timeRows=[];matRows=[];addTimeRow();renderMaterials();clearSig('customerSig');clearSig('engineerSig');
 }
+let customerRecords={};
+try{customerRecords=JSON.parse(localStorage.getItem('rkey_customer_records')||'{}');if(typeof customerRecords!=='object'||!customerRecords)customerRecords={}}catch(e){customerRecords={}}
+function saveCustomerRecords(){localStorage.setItem('rkey_customer_records',JSON.stringify(customerRecords))}
+function getCustomerInfo(name){
+ let key=(name||'').trim().toLowerCase();if(!key)return{site:'',contact:'',email:''};
+ let rec=customerRecords[key];
+ let old=jobs.find(j=>j.customer.toLowerCase()===key&&j.site);
+ return{
+  site:(rec&&rec.site)||(old&&old.site)||'',
+  contact:(rec&&rec.contact)||(old&&old.contact)||'',
+  email:(rec&&rec.email)||''
+ };
+}
 function customerChanged(){
- let c=document.getElementById('f_customer').value.trim();let old=jobs.find(j=>j.customer.toLowerCase()===c.toLowerCase()&&j.site);
- if(old){document.getElementById('f_site').value=old.site;document.getElementById('f_contact').value=old.contact||''}
+ let c=document.getElementById('f_customer').value.trim();if(!c)return;
+ let info=getCustomerInfo(c);
+ document.getElementById('f_site').value=info.site;
+ document.getElementById('f_contact').value=info.contact;
+ document.getElementById('f_email').value=info.email;
 }
 function addTimeRow(d='',nt='',ot='',dt='',mile='',eid=''){
  timeRows.push({date:d||new Date().toISOString().slice(0,10),nt,ot,dt,mile,eid});renderTime()
@@ -149,7 +198,7 @@ function saveJob(){
  const v=id=>document.getElementById(id).value;
  let j={
   job:v('f_job'),order:v('f_order'),customer:v('f_customer'),site:v('f_site'),
-  contact:v('f_contact'),date:v('f_date'),status:v('f_status'),type:v('f_type'),
+  contact:v('f_contact'),email:v('f_email').trim(),date:v('f_date'),status:v('f_status'),type:v('f_type'),
   engineers:['e1','e2','e3','e4'].map(v).filter(Boolean),
   comments:v('f_comments'),time:timeRows,materials:matRows.map(x=>x.desc).filter(Boolean),
   customerName:v('custName'),customerPosition:v('custPosition'),
@@ -164,6 +213,12 @@ function saveJob(){
  customers=[...new Set([...customers,j.customer])];
  localStorage.setItem('rkey_jobs',JSON.stringify(jobs));
  localStorage.setItem('rkey_customers',JSON.stringify(customers));
+ if(j.site||j.contact||j.email){
+  let key=j.customer.trim().toLowerCase();
+  customerRecords[key]={name:j.customer,site:j.site,contact:j.contact,email:j.email};
+  saveCustomerRecords();
+ }
+ if(j.status==='Complete'&&j.email)sendCompletionEmail(j);
  openJob(j.job);
 }
 function renderJobs(){
@@ -172,15 +227,51 @@ function renderJobs(){
  document.getElementById('jobList').innerHTML=a.length?a.map(j=>`<div class="jobrow"><div><b>Job ${esc(j.job)}</b> — ${esc(j.customer)}<div class="muted">${esc(j.site)} · ${esc(j.date)} · ${esc(j.type)}</div></div><div class="actions"><span class="pill">${esc(j.status)}</span><button onclick="openJob('${esc(j.job)}')">Open</button></div></div>`).join(''):'<p class="muted">No jobs yet. Tap New Job.</p>';
  document.getElementById('counter').textContent=jobs.length+' jobs'
 }
-function customersPage(){hide();document.getElementById('customers').classList.remove('hidden');document.getElementById('customerView').innerHTML=customers.sort().map(c=>`<div class="jobrow"><b>${esc(c)}</b></div>`).join('');}
+let editingCustomer=null;
+function customersPage(){hide();document.getElementById('customers').classList.remove('hidden');renderCustomers()}
+function renderCustomers(){
+ let q=(document.getElementById('custSearch').value||'').toLowerCase();
+ let list=customers.filter(c=>c.toLowerCase().includes(q)).sort((a,b)=>a.localeCompare(b));
+ document.getElementById('customerView').innerHTML=list.length?list.map(c=>{
+  let info=getCustomerInfo(c);
+  let rowHtml=`<div class="custrow"><div onclick="selectCustomer('${esc(c).replace(/'/g,"\\'")}')" style="flex:1"><b>${esc(c)}</b>
+   <div class="muted">${esc(info.site)||'No site saved'}${info.contact?' · '+esc(info.contact):''}${info.email?' · '+esc(info.email):''}</div></div>
+   <button onclick="event.stopPropagation();toggleEditCustomer('${esc(c).replace(/'/g,"\\'")}')">✎ Edit</button></div>`;
+  if(editingCustomer===c){
+   rowHtml+=`<div class="custedit">
+    <div class="grid">
+     <div><label>Location / Site</label><input id="ec_site" value="${esc(info.site)}"></div>
+     <div><label>Site Contact(s)</label><input id="ec_contact" value="${esc(info.contact)}"></div>
+    </div>
+    <div><label>Email</label><input id="ec_email" type="email" value="${esc(info.email)}"></div>
+    <div class="actions" style="margin-top:8px">
+     <button class="primary" onclick="saveCustomerEdit('${esc(c).replace(/'/g,"\\'")}')">Save</button>
+     <button onclick="editingCustomer=null;renderCustomers()">Cancel</button>
+    </div></div>`;
+  }
+  return rowHtml;
+ }).join(''):'<p class="muted">No customers found.</p>';
+}
+function toggleEditCustomer(name){editingCustomer=(editingCustomer===name?null:name);renderCustomers()}
+function saveCustomerEdit(name){
+ let key=name.trim().toLowerCase();
+ customerRecords[key]={name:name,site:document.getElementById('ec_site').value,contact:document.getElementById('ec_contact').value,email:document.getElementById('ec_email').value.trim()};
+ saveCustomerRecords();editingCustomer=null;renderCustomers();
+}
+function selectCustomer(name){
+ newJob();
+ document.getElementById('f_customer').value=name;
+ customerChanged();
+}
 function openJob(no){
  let j=jobs.find(x=>x.job===no);if(!j)return;hide();document.getElementById('detail').classList.remove('hidden');
  let total=0; (j.time||[]).forEach(r=>total+=(+r.nt||0)+(+r.ot||0)+(+r.dt||0));
  let tr=(j.time||[]).map(r=>`<tr><td>${esc(r.date)}</td><td>${esc(r.nt||'')}</td><td>${esc(r.ot||'')}</td><td>${esc(r.dt||'')}</td><td>${((+r.nt||0)+(+r.ot||0)+(+r.dt||0)).toFixed(2)}</td><td>${esc(r.mile||'')}</td><td>${esc(r.eid||j.engineers[0]||'')}</td></tr>`).join('');
  let mats=(j.materials||[]).map(x=>`<div>${esc(x)}</div>`).join('');
  document.getElementById('detail').innerHTML=`<div class="actions no-print" style="margin-bottom:12px">
- <button onclick="home()">← Back</button><button class="primary" onclick="window.print()">🖨 Print / Save PDF</button>
- <button onclick="shareJob('${esc(j.job)}')">📤 Save to OneDrive</button>
+ <button onclick="home()">← Back</button><button class="primary" onclick="printJob('${esc(j.job)}')">🖨 Print</button>
+ <button class="primary" onclick="downloadPdf('${esc(j.job)}')">⬇ Download PDF</button>
+ <button onclick="shareToOneDrive('${esc(j.job)}')">📤 Save to OneDrive</button>
  <button onclick="emailJob('${esc(j.job)}')">✉ Email</button><button onclick="deleteJob('${esc(j.job)}')" class="danger">Delete</button></div>
  <div class="no-print muted" id="shareHint" style="margin:-6px 0 12px 2px;font-size:12px"></div>
  <div class="job-sheet">
@@ -192,7 +283,7 @@ function openJob(no){
  <div class="title">JOB SHEET</div>
  <table class="info">
  <tr><th>Job No.</th><td>${esc(j.job)}</td><th>Customer Order No.</th><td>${esc(j.order)}</td></tr>
- <tr><th>Customer/Company</th><td>${esc(j.customer)}</td><th>Engineer(s) in Attendance</th><td>${esc(j.engineers.join(', '))}</td></tr>
+ <tr><th>Customer/Company</th><td>${esc(j.customer)}${j.email?'<br><span style="font-weight:400;font-size:9px">'+esc(j.email)+'</span>':''}</td><th>Engineer(s) in Attendance</th><td>${esc(j.engineers.join(', '))}</td></tr>
  <tr><th>Location/Site</th><td>${esc(j.site)}</td><th>Date</th><td>${esc(j.date)}</td></tr>
  <tr><th>Site Contact(s)</th><td>${esc(j.contact)}</td><th>Type of Work</th><td>${esc(j.type)}</td></tr>
  </table>
@@ -219,54 +310,117 @@ function weekEndingLabel(j){
  let we=new Date(d); we.setDate(d.getDate()+addDays);
  return we.toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric'});
 }
-function safeName(s){return String(s||'').replace(/[\\\/:*?"<>|]/g,'-').trim()}
-async function shareJob(no){
- let j=jobs.find(x=>x.job===no);if(!j)return;
+function isStandalone(){
+ return window.matchMedia&&window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone===true;
+}
+function printJob(no){
+ if(isStandalone()){
+  // iOS (and some Android) home-screen apps block window.print() entirely with no error —
+  // it just silently does nothing. Opening the job in a normal browser tab works around this.
+  let url=new URL(location.href);
+  url.hash='';url.search='?print='+encodeURIComponent(no);
+  window.open(url.toString(),'_blank');
+  return;
+ }
+ window.print();
+}
+async function generatePdfBlob(no){
+ let j=jobs.find(x=>x.job===no);if(!j)return null;
  let sheet=document.querySelector('.job-sheet');
- if(!sheet||!window.html2canvas||!window.jspdf){alert('PDF tools are still loading — check your connection and try again in a moment.');return}
- let btn=event&&event.target;if(btn)btn.textContent='Generating…';
- try{
-  let canvas=await html2canvas(sheet,{scale:2,useCORS:true,backgroundColor:'#ffffff'});
-  let {jsPDF}=window.jspdf;
-  let pdf=new jsPDF('p','mm','a4');
-  let pageW=pdf.internal.pageSize.getWidth(),pageH=pdf.internal.pageSize.getHeight();
-  let imgW=pageW,imgH=canvas.height*imgW/canvas.width;
-  let img=canvas.toDataURL('image/jpeg',0.92);
-  if(imgH<=pageH){pdf.addImage(img,'JPEG',0,0,imgW,imgH)}
-  else{ // split across pages
-   let y=0,remaining=canvas.height,pageCanvasH=canvas.width*pageH/imgW;
-   while(remaining>0){
-    let sliceH=Math.min(pageCanvasH,remaining);
-    let sliceCanvas=document.createElement('canvas');
-    sliceCanvas.width=canvas.width;sliceCanvas.height=sliceH;
-    sliceCanvas.getContext('2d').drawImage(canvas,0,y,canvas.width,sliceH,0,0,canvas.width,sliceH);
-    let sliceImg=sliceCanvas.toDataURL('image/jpeg',0.92);
-    if(y>0)pdf.addPage();
-    pdf.addImage(sliceImg,'JPEG',0,0,imgW,sliceH*imgW/canvas.width);
-    y+=sliceH;remaining-=sliceH;
-   }
+ if(!sheet)return null;
+ let ready=await window.pdfLibsReady;
+ if(!ready||!window.html2canvas||!window.jspdf){
+  alert('Could not load the PDF tools — check your internet connection and try again.');
+  return null;
+ }
+ let canvas=await html2canvas(sheet,{scale:2,useCORS:true,backgroundColor:'#ffffff'});
+ let {jsPDF}=window.jspdf;
+ let pdf=new jsPDF('p','mm','a4');
+ let pageW=pdf.internal.pageSize.getWidth(),pageH=pdf.internal.pageSize.getHeight();
+ let imgW=pageW,imgH=canvas.height*imgW/canvas.width;
+ let img=canvas.toDataURL('image/jpeg',0.92);
+ if(imgH<=pageH){pdf.addImage(img,'JPEG',0,0,imgW,imgH)}
+ else{ // split across pages
+  let y=0,remaining=canvas.height,pageCanvasH=canvas.width*pageH/imgW;
+  while(remaining>0){
+   let sliceH=Math.min(pageCanvasH,remaining);
+   let sliceCanvas=document.createElement('canvas');
+   sliceCanvas.width=canvas.width;sliceCanvas.height=sliceH;
+   sliceCanvas.getContext('2d').drawImage(canvas,0,y,canvas.width,sliceH,0,0,canvas.width,sliceH);
+   let sliceImg=sliceCanvas.toDataURL('image/jpeg',0.92);
+   if(y>0)pdf.addPage();
+   pdf.addImage(sliceImg,'JPEG',0,0,imgW,sliceH*imgW/canvas.width);
+   y+=sliceH;remaining-=sliceH;
   }
-  let we=weekEndingLabel(j);
-  let engPart=safeName(j.engineers.join('+'))||'Unassigned';
-  let filename='Job '+safeName(j.job)+' - '+engPart+' - WE '+safeName(we)+'.pdf';
-  let blob=pdf.output('blob');
-  let file=new File([blob],filename,{type:'application/pdf'});
+ }
+ let we=weekEndingLabel(j);
+ let engPart=safeName(j.engineers.join('+'))||'Unassigned';
+ let filename='Job '+safeName(j.job)+' - '+engPart+' - WE '+safeName(we)+'.pdf';
+ return{blob:pdf.output('blob'),filename,engPart,we};
+}
+async function downloadPdf(no){
+ let btn=event&&event.target;let originalLabel=btn?btn.textContent:'';
+ if(btn){btn.disabled=true;btn.textContent='Generating…'}
+ try{
+  let result=await generatePdfBlob(no);
+  if(!result)return;
+  let url=URL.createObjectURL(result.blob);
+  let a=document.createElement('a');a.href=url;a.download=result.filename;document.body.appendChild(a);a.click();a.remove();
+  setTimeout(()=>URL.revokeObjectURL(url),4000);
+ }catch(e){alert('Could not generate the PDF: '+e.message)}
+ finally{if(btn){btn.disabled=false;btn.textContent=originalLabel}}
+}
+async function shareToOneDrive(no){
+ let btn=event&&event.target;let originalLabel=btn?btn.textContent:'';
+ if(btn){btn.disabled=true;btn.textContent='Generating…'}
+ try{
+  let result=await generatePdfBlob(no);
+  if(!result)return;
+  let file=new File([result.blob],result.filename,{type:'application/pdf'});
   if(navigator.canShare&&navigator.canShare({files:[file]})){
-   await navigator.share({files:[file],title:filename,text:'Job Sheets / '+engPart+' / Week Ending '+we});
+   await navigator.share({files:[file],title:result.filename,text:'Job Sheets / '+result.engPart+' / Week Ending '+result.we});
   }else{
-   let url=URL.createObjectURL(blob);
-   let a=document.createElement('a');a.href=url;a.download=filename;document.body.appendChild(a);a.click();a.remove();
+   let url=URL.createObjectURL(result.blob);
+   let a=document.createElement('a');a.href=url;a.download=result.filename;document.body.appendChild(a);a.click();a.remove();
    setTimeout(()=>URL.revokeObjectURL(url),4000);
-   alert('Saved as "'+filename+'". In Files, choose "Save to OneDrive" and file it under:\\nJob Sheets / '+engPart+' / Week Ending '+we);
+   alert('Saved as "'+result.filename+'". In Files, choose "Save to OneDrive" and file it under:\nJob Sheets / '+result.engPart+' / Week Ending '+result.we);
   }
  }catch(e){alert('Could not generate the PDF: '+e.message)}
- finally{if(btn)btn.textContent='📤 Save to OneDrive'}
+ finally{if(btn){btn.disabled=false;btn.textContent=originalLabel}}
 }
 function emailJob(no){
  let j=jobs.find(x=>x.job===no);if(!j)return;
  let subject=encodeURIComponent('Job Sheet '+j.job+' - '+j.customer);
- let body=encodeURIComponent('Job Sheet '+j.job+'\\nCustomer: '+j.customer+'\\nSite: '+j.site+'\\nDate: '+j.date+'\\n\\nPlease attach the PDF generated using Print / Save PDF.');
- location.href='mailto:?subject='+subject+'&body='+body;
+ let body=encodeURIComponent('Job Sheet '+j.job+'\nCustomer: '+j.customer+'\nSite: '+j.site+'\nDate: '+j.date+'\n\nPlease attach the PDF generated using Download PDF.');
+ let mailtoUrl='mailto:'+(j.email||'')+'?subject='+subject+'&body='+body;
+ // location.href can silently no-op inside a home-screen PWA's webview; clicking a real
+ // anchor element is the more reliable way to hand the mailto: link off to the Mail app.
+ let a=document.createElement('a');a.href=mailtoUrl;a.style.display='none';
+ document.body.appendChild(a);a.click();
+ setTimeout(()=>a.remove(),1000);
+}
+// ---- Automatic "Job Complete" email (optional) ----
+// This is a static site with no server, so a truly silent auto-send needs a third-party
+// email API. To switch this on:
+// 1. Create a free account at https://www.emailjs.com
+// 2. Add an Email Service (e.g. Gmail/Outlook) and note its Service ID
+// 3. Create an Email Template with variables {{to_email}} {{customer}} {{job}} {{site}} {{date}} {{engineers}}, note its Template ID
+// 4. Copy your Public Key from Account > API Keys
+// 5. Paste all three below — jobs saved with Status "Complete" and a Customer Email will then email automatically.
+const EMAILJS_SERVICE_ID='';
+const EMAILJS_TEMPLATE_ID='';
+const EMAILJS_PUBLIC_KEY='';
+if(EMAILJS_PUBLIC_KEY&&window.emailjs){try{emailjs.init({publicKey:EMAILJS_PUBLIC_KEY})}catch(e){}}
+function sendCompletionEmail(j){
+ if(!j.email)return;
+ if(!(EMAILJS_SERVICE_ID&&EMAILJS_TEMPLATE_ID&&EMAILJS_PUBLIC_KEY&&window.emailjs)){
+  console.warn('Auto-email skipped: EmailJS is not configured yet (see EMAILJS_SERVICE_ID near the top of the script).');
+  return;
+ }
+ emailjs.send(EMAILJS_SERVICE_ID,EMAILJS_TEMPLATE_ID,{
+  to_email:j.email,customer:j.customer,job:j.job,site:j.site,date:j.date,engineers:j.engineers.join(', ')
+ }).then(()=>console.log('Completion email sent to',j.email))
+   .catch(err=>{console.error('Auto-email failed:',err);alert('Job saved, but the automatic email to the customer failed to send.')});
 }
 function deleteJob(no){if(confirm('Delete this job?')){jobs=jobs.filter(x=>x.job!==no);localStorage.setItem('rkey_jobs',JSON.stringify(jobs));home()}}
 function canvasSetup(id){
@@ -287,7 +441,24 @@ function initCanvases(){
   canvasSetup(id);
  });
 }
+function fitJobSheetToPage(){
+ let sheet=document.querySelector('.job-sheet');if(!sheet)return;
+ sheet.style.zoom=1;
+ let pageH=(297-14)*96/25.4; // A4 height minus 7mm top/bottom margins, in CSS px @96dpi
+ let contentH=sheet.scrollHeight;
+ if(contentH>pageH){
+  let scale=Math.max(0.55,pageH/contentH);
+  sheet.style.zoom=scale;
+ }
+}
+window.addEventListener('beforeprint',fitJobSheetToPage);
+window.addEventListener('afterprint',()=>{let sheet=document.querySelector('.job-sheet');if(sheet)sheet.style.zoom=1});
 setupLists();renderJobs();setTimeout(initCanvases,100)
+let printParam=new URLSearchParams(location.search).get('print');
+if(printParam){
+ openJob(printParam);
+ setTimeout(()=>window.print(),400);
+}
 </script>
 <script>
 if ("serviceWorker" in navigator) {
