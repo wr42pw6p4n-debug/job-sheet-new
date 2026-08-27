@@ -79,8 +79,8 @@ loadWithFallback(['https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.mi
 <section id="form" class="card no-print hidden">
 <h2>New Job Order</h2>
 <div class="grid">
-<div><label>Job No.</label><input id="f_job"></div>
-<div><label>Customer Order No.</label><input id="f_order"></div>
+<div><label>Job No.</label><input id="f_job" oninput="jobNumberChanged()"></div>
+<div><label>Customer Order No.</label><input id="f_order" oninput="orderNumberChanged()"></div>
 <div><label>Customer / Company</label><input id="f_customer" list="customerOptions" oninput="customerChanged()"><datalist id="customerOptions"></datalist></div>
 <div><label>Customer Email</label><input id="f_email" type="email" placeholder="name@company.com"></div>
 <div><label>Type of Work</label><select id="f_type"></select></div>
@@ -173,6 +173,31 @@ function customerChanged(){
  document.getElementById('f_site').value=info.site;
  document.getElementById('f_contact').value=info.contact;
  document.getElementById('f_email').value=info.email;
+}
+// Looks up an existing job sheet (imported history or previously saved) by Job No. or
+// Customer Order No. and scrapes its description (Type of Work) and Date, plus the
+// customer/site/contact, straight onto the new job form so nothing has to be retyped.
+function fillFromOriginalJobSheet(match){
+ if(!match)return;
+ if(match.customer)document.getElementById('f_customer').value=match.customer;
+ if(match.date)document.getElementById('f_date').value=match.date;
+ if(match.type)document.getElementById('f_type').value=match.type;
+ if(!document.getElementById('f_order').value&&match.order)document.getElementById('f_order').value=match.order;
+ customerChanged();
+ if(!document.getElementById('f_site').value&&match.site)document.getElementById('f_site').value=match.site;
+ if(!document.getElementById('f_contact').value&&match.contact)document.getElementById('f_contact').value=match.contact;
+}
+function jobNumberChanged(){
+ let jobNo=document.getElementById('f_job').value.trim();if(!jobNo)return;
+ let match=jobs.find(x=>(x.job||'').trim().toLowerCase()===jobNo.toLowerCase());
+ if(match)fillFromOriginalJobSheet(match);
+}
+function orderNumberChanged(){
+ let orderNo=document.getElementById('f_order').value.trim();if(!orderNo)return;
+ let jobNo=document.getElementById('f_job').value.trim();
+ if(jobNo&&jobs.some(x=>(x.job||'').trim().toLowerCase()===jobNo.toLowerCase()))return; // Job No. already matched something
+ let match=jobs.find(x=>(x.order||'').trim().toLowerCase()===orderNo.toLowerCase());
+ if(match)fillFromOriginalJobSheet(match);
 }
 function addTimeRow(d='',nt='',ot='',dt='',mile='',eid=''){
  timeRows.push({date:d||new Date().toISOString().slice(0,10),nt,ot,dt,mile,eid});renderTime()
@@ -297,18 +322,18 @@ function openJob(no){
  Name: ${esc(j.customerName||'')} &nbsp;&nbsp; Position: ${esc(j.customerPosition||'')}<div class="signprint">${j.customerSig?`<img src="${j.customerSig}" style="max-height:52px;max-width:260px">`:''}</div>Customer Signature / Date</div>
  <div class="footer">Job ${esc(j.job)} — Key Engineering Chesterfield LTD Job Sheet</div>
  </div>`;
- let we=weekEndingLabel(j);
+ let ws=weekStartingLabel(j);
  document.getElementById('shareHint').textContent=j.engineers.length
-  ? 'Suggested OneDrive path: Job Sheets / '+j.engineers.join(' + ')+' / Week Ending '+we
+  ? 'Suggested OneDrive path: Job Sheets / '+j.engineers.join(' + ')+' / Week starting '+ws
   : 'Add an engineer above to get a suggested OneDrive folder path.';
 }
-function weekEndingLabel(j){
+function weekStartingLabel(j){
  let d=j.date?new Date(j.date+'T00:00:00'):(j.created?new Date(j.created):new Date());
  if(isNaN(d))d=new Date();
  let day=d.getDay(); // 0=Sun..6=Sat
- let addDays=(7-day)%7; // days until next Sunday (0 if already Sunday)
- let we=new Date(d); we.setDate(d.getDate()+addDays);
- return we.toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric'});
+ let daysSinceMonday=(day+6)%7; // Mon=0, Tue=1 ... Sun=6
+ let ws=new Date(d); ws.setDate(d.getDate()-daysSinceMonday);
+ return ws.toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric'});
 }
 function isStandalone(){
  return window.matchMedia&&window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone===true;
@@ -353,10 +378,10 @@ async function generatePdfBlob(no){
    y+=sliceH;remaining-=sliceH;
   }
  }
- let we=weekEndingLabel(j);
+ let ws=weekStartingLabel(j);
  let engPart=safeName(j.engineers.join('+'))||'Unassigned';
- let filename='Job '+safeName(j.job)+' - '+engPart+' - WE '+safeName(we)+'.pdf';
- return{blob:pdf.output('blob'),filename,engPart,we};
+ let filename='Job '+safeName(j.job)+' - '+engPart+' - WS '+safeName(ws)+'.pdf';
+ return{blob:pdf.output('blob'),filename,engPart,ws};
 }
 async function downloadPdf(no){
  let btn=event&&event.target;let originalLabel=btn?btn.textContent:'';
@@ -378,12 +403,12 @@ async function shareToOneDrive(no){
   if(!result)return;
   let file=new File([result.blob],result.filename,{type:'application/pdf'});
   if(navigator.canShare&&navigator.canShare({files:[file]})){
-   await navigator.share({files:[file],title:result.filename,text:'Job Sheets / '+result.engPart+' / Week Ending '+result.we});
+   await navigator.share({files:[file],title:result.filename,text:'Job Sheets / '+result.engPart+' / Week starting '+result.ws});
   }else{
    let url=URL.createObjectURL(result.blob);
    let a=document.createElement('a');a.href=url;a.download=result.filename;document.body.appendChild(a);a.click();a.remove();
    setTimeout(()=>URL.revokeObjectURL(url),4000);
-   alert('Saved as "'+result.filename+'". In Files, choose "Save to OneDrive" and file it under:\nJob Sheets / '+result.engPart+' / Week Ending '+result.we);
+   alert('Saved as "'+result.filename+'". In Files, choose "Save to OneDrive" and file it under:\nJob Sheets / '+result.engPart+' / Week starting '+result.ws);
   }
  }catch(e){alert('Could not generate the PDF: '+e.message)}
  finally{if(btn){btn.disabled=false;btn.textContent=originalLabel}}
