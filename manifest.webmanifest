@@ -1,12 +1,12 @@
 {
-  "name": "R Key Engineering Job Manager",
-  "short_name": "R Key Jobs",
+  "name": "Key Engineering Chesterfield LTD Job Manager",
+  "short_name": "KEC Jobs",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",
   "background_color": "#eef1f4",
   "theme_color": "#17232d",
-  "description": "R Key Engineering job sheet and job management app.",
+  "description": "Key Engineering Chesterfield LTD job sheet and job management app.",
   "icons": [
     {
       "src": "icon-192.png",
