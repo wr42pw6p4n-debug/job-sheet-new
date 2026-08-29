@@ -63,7 +63,7 @@ loadWithFallback(['https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.mi
 </script>
 </head>
 <body>
-<header class="no-print"><div class="head"><h1>Key Engineering Chesterfield LTD — Job Manager <span style="font-size:11px;font-weight:400;opacity:.55">build 2026-08-28.4</span></h1><span id="counter"></span></div></header>
+<header class="no-print"><div class="head"><div style="display:flex;align-items:center;gap:10px"><img src="icon-192.png" alt="Key Engineering logo" style="height:36px;width:36px;border-radius:8px;flex-shrink:0"><h1>Key Engineering Chesterfield LTD — Job Manager <span style="font-size:11px;font-weight:400;opacity:.55">build 2026-08-28.5</span></h1></div><span id="counter"></span></div></header>
 <div class="wrap">
 <div class="nav no-print">
 <button class="primary" onclick="newJob()">＋ New Job</button><button onclick="home()">Jobs</button><button onclick="customersPage()">Customers</button>
@@ -77,7 +77,7 @@ loadWithFallback(['https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.mi
 </section>
 
 <section id="form" class="card no-print hidden">
-<h2>New Job Order</h2>
+<h2 id="formHeading">New Job Order</h2>
 <div class="grid">
 <div><label>Job No.</label><input id="f_job" oninput="jobNumberChanged()"></div>
 <div><label>Customer Order No.</label><input id="f_order" oninput="orderNumberChanged()"></div>
@@ -151,8 +151,36 @@ function nextJob(){let n=jobs.map(j=>parseInt(j.job,10)).filter(Number.isFinite)
 function setupLists(){customerOptions.innerHTML=customers.map(x=>`<option value="${esc(x)}"></option>`).join('');document.getElementById('engineerOptions').innerHTML=engineers.map(x=>`<option value="${esc(x)}"></option>`).join('');document.getElementById('f_type').innerHTML=types.map(x=>`<option>${esc(x)}</option>`).join('')}
 function newJob(){
  hide();document.getElementById('form').classList.remove('hidden');setupLists();f_job.value=nextJob();f_date.value=new Date().toISOString().slice(0,10);
+ editingJobNo=null;document.getElementById('formHeading').textContent='New Job Order';
  ['f_order','f_customer','f_email','f_site','f_contact','e1','e2','e3','e4','f_comments','custName','custPosition'].forEach(x=>document.getElementById(x).value='');
  timeRows=[];matRows=[];addTimeRow();renderMaterials();clearSig('customerSig');clearSig('engineerSig');
+}
+let editingJobNo=null;
+function editJob(no){
+ let j=jobs.find(x=>x.job===no);if(!j)return;
+ hide();document.getElementById('form').classList.remove('hidden');setupLists();
+ editingJobNo=no;document.getElementById('formHeading').textContent='Editing Job '+no;
+ document.getElementById('f_job').value=j.job;
+ document.getElementById('f_order').value=j.order||'';
+ document.getElementById('f_customer').value=j.customer||'';
+ document.getElementById('f_email').value=j.email||'';
+ document.getElementById('f_site').value=j.site||'';
+ document.getElementById('f_contact').value=j.contact||'';
+ document.getElementById('f_date').value=j.date||'';
+ document.getElementById('f_status').value=j.status||'Open';
+ document.getElementById('f_type').value=j.type||'';
+ ['e1','e2','e3','e4'].forEach((id,i)=>document.getElementById(id).value=(j.engineers||[])[i]||'');
+ document.getElementById('f_comments').value=j.comments||'';
+ document.getElementById('custName').value=j.customerName||'';
+ document.getElementById('custPosition').value=j.customerPosition||'';
+ timeRows=(j.time||[]).map(r=>({...r}));if(!timeRows.length)timeRows.push({date:j.date||new Date().toISOString().slice(0,10),nt:'',ot:'',dt:'',mile:'',eid:''});
+ matRows=(j.materials||[]).map(desc=>({desc}));
+ renderTime();renderMaterials();
+ clearSig('customerSig');clearSig('engineerSig');
+ setTimeout(()=>{
+  if(j.customerSig){let img=new Image();img.onload=()=>{let c=document.getElementById('customerSig');c.getContext('2d').drawImage(img,0,0,c.width,c.height)};img.src=j.customerSig}
+  if(j.engineerSig){let img=new Image();img.onload=()=>{let c=document.getElementById('engineerSig');c.getContext('2d').drawImage(img,0,0,c.width,c.height)};img.src=j.engineerSig}
+ },150);
 }
 let customerRecords={};
 try{customerRecords=JSON.parse(localStorage.getItem('rkey_customer_records')||'{}');if(typeof customerRecords!=='object'||!customerRecords)customerRecords={}}catch(e){customerRecords={}}
@@ -233,8 +261,15 @@ function saveJob(){
  };
  if(!j.customer){alert('Please enter the customer/company.');return}
  if(!j.job){alert('Please enter a job number.');return}
- if(jobs.some(x=>x.job===j.job)){if(!confirm('Job '+j.job+' already exists. Save anyway as a duplicate?'))return}
- jobs.push(j);
+ if(editingJobNo!==null){
+  let idx=jobs.findIndex(x=>x.job===editingJobNo);
+  if(idx===-1){alert('Could not find the original job to update — it may have been deleted.');return}
+  j.created=jobs[idx].created||j.created;
+  jobs[idx]=j;
+ }else{
+  if(jobs.some(x=>x.job===j.job)){if(!confirm('Job '+j.job+' already exists. Save anyway as a duplicate?'))return}
+  jobs.push(j);
+ }
  customers=[...new Set([...customers,j.customer])];
  localStorage.setItem('rkey_jobs',JSON.stringify(jobs));
  localStorage.setItem('rkey_customers',JSON.stringify(customers));
@@ -244,6 +279,7 @@ function saveJob(){
   saveCustomerRecords();
  }
  if(j.status==='Complete'&&j.email)sendCompletionEmail(j);
+ editingJobNo=null;
  openJob(j.job);
 }
 function renderJobs(){
@@ -288,16 +324,19 @@ function selectCustomer(name){
  document.getElementById('f_customer').value=name;
  customerChanged();
 }
+let printLanding=false;
 function openJob(no){
  let j=jobs.find(x=>x.job===no);if(!j)return;hide();document.getElementById('detail').classList.remove('hidden');
  let total=0; (j.time||[]).forEach(r=>total+=(+r.nt||0)+(+r.ot||0)+(+r.dt||0));
  let tr=(j.time||[]).map(r=>`<tr><td>${esc(r.date)}</td><td>${esc(r.nt||'')}</td><td>${esc(r.ot||'')}</td><td>${esc(r.dt||'')}</td><td>${((+r.nt||0)+(+r.ot||0)+(+r.dt||0)).toFixed(2)}</td><td>${esc(r.mile||'')}</td><td>${esc(r.eid||j.engineers[0]||'')}</td></tr>`).join('');
  let mats=(j.materials||[]).map(x=>`<div>${esc(x)}</div>`).join('');
- document.getElementById('detail').innerHTML=`<div class="actions no-print" style="margin-bottom:12px">
+ document.getElementById('detail').innerHTML=`${printLanding?'<div class="no-print" style="background:#fff8d6;border:1px solid #e5cf6b;border-radius:8px;padding:10px 12px;margin-bottom:12px;font-size:14px">Tap <strong>🖨 Print</strong> below to continue.</div>':''}<div class="actions no-print" style="margin-bottom:12px">
  <button onclick="home()">← Back</button><button class="primary" onclick="printJob('${esc(j.job)}')">🖨 Print</button>
  <button class="primary" onclick="downloadPdf('${esc(j.job)}')">⬇ Download PDF</button>
  <button onclick="shareToOneDrive('${esc(j.job)}')">📤 Save to OneDrive</button>
- <button onclick="emailJob('${esc(j.job)}')">✉ Email</button><button onclick="deleteJob('${esc(j.job)}')" class="danger">Delete</button></div>
+ <button onclick="emailJob('${esc(j.job)}')">✉ Email</button>
+ <button onclick="editJob('${esc(j.job)}')">✎ Edit</button>
+ <button onclick="deleteJob('${esc(j.job)}')" class="danger">Delete</button></div>
  <div class="no-print muted" id="shareHint" style="margin:-6px 0 12px 2px;font-size:12px"></div>
  <div class="job-sheet">
  <div class="company"><strong>KEY ENGINEERING CHESTERFIELD LTD</strong><br>The Bungalow, Whittington Lane, Unstone, Dronfield, S18 4DQ<br>
@@ -482,8 +521,12 @@ window.addEventListener('afterprint',()=>{let sheet=document.querySelector('.job
 setupLists();renderJobs();setTimeout(initCanvases,100)
 let printParam=new URLSearchParams(location.search).get('print');
 if(printParam){
+ printLanding=true;
  openJob(printParam);
- setTimeout(()=>window.print(),400);
+ printLanding=false;
+ // Don't auto-call window.print() here — browsers routinely ignore print() unless it's
+ // triggered by a direct, immediate tap. The Print button in the actions bar above is
+ // now inside a normal browser tab (not the standalone app), so tapping it here works.
 }
 </script>
 <script>
