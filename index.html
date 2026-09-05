@@ -81,6 +81,7 @@ loadWithFallback(['https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.mi
 <div class="grid">
 <div><label>Job No.</label><input id="f_job" oninput="jobNumberChanged()"></div>
 <div><label>Customer Order No.</label><input id="f_order" oninput="orderNumberChanged()"></div>
+<div><label>Customer (quick select)</label><select id="f_customerSelect" onchange="selectExistingCustomer()"></select></div>
 <div><label>Customer / Company</label><input id="f_customer" list="customerOptions" oninput="customerChanged()"><datalist id="customerOptions"></datalist></div>
 <div><label>Customer Email</label><input id="f_email" type="email" placeholder="name@company.com"></div>
 <div><label>Type of Work</label><select id="f_type"></select></div>
@@ -148,11 +149,22 @@ function esc(v){return String(v??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&l
 function hide(){['home','form','customers','detail'].forEach(x=>document.getElementById(x).classList.add('hidden'))}
 function home(){hide();document.getElementById('home').classList.remove('hidden');renderJobs()}
 function nextJob(){let n=jobs.map(j=>parseInt(j.job,10)).filter(Number.isFinite);return String((n.length?Math.max(...n):0)+1)}
-function setupLists(){customerOptions.innerHTML=customers.map(x=>`<option value="${esc(x)}"></option>`).join('');document.getElementById('engineerOptions').innerHTML=engineers.map(x=>`<option value="${esc(x)}"></option>`).join('');document.getElementById('f_type').innerHTML=types.map(x=>`<option>${esc(x)}</option>`).join('')}
+function setupLists(){customerOptions.innerHTML=customers.map(x=>`<option value="${esc(x)}"></option>`).join('');document.getElementById('engineerOptions').innerHTML=engineers.map(x=>`<option value="${esc(x)}"></option>`).join('');document.getElementById('f_type').innerHTML=types.map(x=>`<option>${esc(x)}</option>`).join('');
+ let sel=document.getElementById('f_customerSelect');
+ let current=sel.value;
+ sel.innerHTML='<option value="">— Select existing customer —</option>'+[...customers].sort((a,b)=>a.localeCompare(b)).map(x=>`<option value="${esc(x)}">${esc(x)}</option>`).join('');
+ sel.value=customers.includes(current)?current:'';
+}
+function selectExistingCustomer(){
+ let name=document.getElementById('f_customerSelect').value;
+ if(!name)return;
+ document.getElementById('f_customer').value=name;
+ customerChanged();
+}
 function newJob(){
  hide();document.getElementById('form').classList.remove('hidden');setupLists();f_job.value=nextJob();f_date.value=new Date().toISOString().slice(0,10);
  editingJobNo=null;document.getElementById('formHeading').textContent='New Job Order';
- ['f_order','f_customer','f_email','f_site','f_contact','e1','e2','e3','e4','f_comments','custName','custPosition'].forEach(x=>document.getElementById(x).value='');
+ ['f_order','f_customer','f_customerSelect','f_email','f_site','f_contact','e1','e2','e3','e4','f_comments','custName','custPosition'].forEach(x=>document.getElementById(x).value='');
  timeRows=[];matRows=[];addTimeRow();renderMaterials();clearSig('customerSig');clearSig('engineerSig');
 }
 let editingJobNo=null;
@@ -163,6 +175,7 @@ function editJob(no){
  document.getElementById('f_job').value=j.job;
  document.getElementById('f_order').value=j.order||'';
  document.getElementById('f_customer').value=j.customer||'';
+ document.getElementById('f_customerSelect').value=customers.includes(j.customer)?j.customer:'';
  document.getElementById('f_email').value=j.email||'';
  document.getElementById('f_site').value=j.site||'';
  document.getElementById('f_contact').value=j.contact||'';
@@ -285,7 +298,7 @@ function saveJob(){
 function renderJobs(){
  let q=(search.value||'').toLowerCase(),a=jobs.filter(j=>JSON.stringify(j).toLowerCase().includes(q)).sort((a,b)=>b.created.localeCompare(a.created));
  document.getElementById('stats').innerHTML=`<span class="stat">Total: ${jobs.length}</span><span class="stat">Open: ${jobs.filter(x=>x.status==='Open').length}</span><span class="stat">Complete: ${jobs.filter(x=>x.status==='Complete').length}</span>`;
- document.getElementById('jobList').innerHTML=a.length?a.map(j=>`<div class="jobrow"><div><b>Job ${esc(j.job)}</b> — ${esc(j.customer)}<div class="muted">${esc(j.site)} · ${esc(j.date)} · ${esc(j.type)}</div></div><div class="actions"><span class="pill">${esc(j.status)}</span><button onclick="openJob('${esc(j.job)}')">Open</button></div></div>`).join(''):'<p class="muted">No jobs yet. Tap New Job.</p>';
+ document.getElementById('jobList').innerHTML=a.length?a.map(j=>`<div class="jobrow"><div><b>Job ${esc(j.job)}</b> — ${esc(j.customer)}<div class="muted">${esc(j.site)} · ${esc(ukDate(j.date))} · ${esc(j.type)}</div></div><div class="actions"><span class="pill">${esc(j.status)}</span><button onclick="openJob('${esc(j.job)}')">Open</button></div></div>`).join(''):'<p class="muted">No jobs yet. Tap New Job.</p>';
  document.getElementById('counter').textContent=jobs.length+' jobs'
 }
 let editingCustomer=null;
@@ -322,13 +335,14 @@ function saveCustomerEdit(name){
 function selectCustomer(name){
  newJob();
  document.getElementById('f_customer').value=name;
+ document.getElementById('f_customerSelect').value=customers.includes(name)?name:'';
  customerChanged();
 }
 let printLanding=false;
 function openJob(no){
  let j=jobs.find(x=>x.job===no);if(!j)return;hide();document.getElementById('detail').classList.remove('hidden');
  let total=0; (j.time||[]).forEach(r=>total+=(+r.nt||0)+(+r.ot||0)+(+r.dt||0));
- let tr=(j.time||[]).map(r=>`<tr><td>${esc(r.date)}</td><td>${esc(r.nt||'')}</td><td>${esc(r.ot||'')}</td><td>${esc(r.dt||'')}</td><td>${((+r.nt||0)+(+r.ot||0)+(+r.dt||0)).toFixed(2)}</td><td>${esc(r.mile||'')}</td><td>${esc(r.eid||j.engineers[0]||'')}</td></tr>`).join('');
+ let tr=(j.time||[]).map(r=>`<tr><td>${esc(ukDate(r.date))}</td><td>${esc(r.nt||'')}</td><td>${esc(r.ot||'')}</td><td>${esc(r.dt||'')}</td><td>${((+r.nt||0)+(+r.ot||0)+(+r.dt||0)).toFixed(2)}</td><td>${esc(r.mile||'')}</td><td>${esc(r.eid||j.engineers[0]||'')}</td></tr>`).join('');
  let mats=(j.materials||[]).map(x=>`<div>${esc(x)}</div>`).join('');
  document.getElementById('detail').innerHTML=`${printLanding?'<div class="no-print" style="background:#fff8d6;border:1px solid #e5cf6b;border-radius:8px;padding:10px 12px;margin-bottom:12px;font-size:14px">Tap <strong>🖨 Print</strong> below to continue.</div>':''}<div class="actions no-print" style="margin-bottom:12px">
  <button onclick="home()">← Back</button><button class="primary" onclick="printJob('${esc(j.job)}')">🖨 Print</button>
@@ -339,16 +353,19 @@ function openJob(no){
  <button onclick="deleteJob('${esc(j.job)}')" class="danger">Delete</button></div>
  <div class="no-print muted" id="shareHint" style="margin:-6px 0 12px 2px;font-size:12px"></div>
  <div class="job-sheet">
- <div class="company"><strong>KEY ENGINEERING CHESTERFIELD LTD</strong><br>The Bungalow, Whittington Lane, Unstone, Dronfield, S18 4DQ<br>
+ <div class="company" style="display:flex;align-items:center;gap:12px">
+ <img src="icon-192.png" alt="Key Engineering logo" style="height:48px;width:48px;border-radius:8px;flex-shrink:0">
+ <div style="text-align:left"><strong>KEY ENGINEERING CHESTERFIELD LTD</strong><br>The Bungalow, Whittington Lane, Unstone, Dronfield, S18 4DQ<br>
  Overhead Cranes & Hoists ● Runways & Gantries ● Lifting Beams & Jib Cranes ● Crane Conversions & Repairs<br>
  Site Installation ● Testing ● Site Surveys ● Crane Service & Inspection ● Spares<br>
  Lifting Tackle Supplies & Inspection ● Fork Lift Truck Hire, Sales Services & Repair<br>
  Tel/Fax: 01246 413524 &nbsp; Mobile: 07971 222574 &nbsp; Email: rkeyengineering@hotmail.co.uk</div>
+ </div>
  <div class="title">JOB SHEET</div>
  <table class="info">
  <tr><th>Job No.</th><td>${esc(j.job)}</td><th>Customer Order No.</th><td>${esc(j.order)}</td></tr>
  <tr><th>Customer/Company</th><td>${esc(j.customer)}${j.email?'<br><span style="font-weight:400;font-size:9px">'+esc(j.email)+'</span>':''}</td><th>Engineer(s) in Attendance</th><td>${esc(j.engineers.join(', '))}</td></tr>
- <tr><th>Location/Site</th><td>${esc(j.site)}</td><th>Date</th><td>${esc(j.date)}</td></tr>
+ <tr><th>Location/Site</th><td>${esc(j.site)}</td><th>Date</th><td>${esc(ukDate(j.date))}</td></tr>
  <tr><th>Site Contact(s)</th><td>${esc(j.contact)}</td><th>Type of Work</th><td>${esc(j.type)}</td></tr>
  </table>
  <div class="section">REPORT OF WORK CARRIED OUT:</div><div class="box">${esc(j.comments||'')}</div>
@@ -358,7 +375,7 @@ function openJob(no){
  <div class="section">Description / Material Used</div><div class="box">${mats||'&nbsp;'}</div>
  <div class="section">ENGINEER'S SIGNATURE</div><div class="cert">${esc(j.engineers[0]||'')}<div class="signprint">${j.engineerSig?`<img src="${j.engineerSig}" style="max-height:52px;max-width:260px">`:''}</div></div>
  <div class="section">CUSTOMER'S CERTIFICATION</div><div class="cert">The work detailed above has been carried out to my complete satisfaction. I further agree that all times stated are correct.<br><br>
- Name: ${esc(j.customerName||'')} &nbsp;&nbsp; Position: ${esc(j.customerPosition||'')}<div class="signprint">${j.customerSig?`<img src="${j.customerSig}" style="max-height:52px;max-width:260px">`:''}</div>Customer Signature / Date</div>
+ Name: ${esc(j.customerName||'')} &nbsp;&nbsp; Position: ${esc(j.customerPosition||'')} &nbsp;&nbsp; Date: ${esc(ukDate(j.date))}<div class="signprint">${j.customerSig?`<img src="${j.customerSig}" style="max-height:52px;max-width:260px">`:''}</div>Customer Signature / Date</div>
  <div class="footer">Job ${esc(j.job)} — Key Engineering Chesterfield LTD Job Sheet</div>
  </div>`;
  let ws=weekStartingLabel(j);
@@ -378,6 +395,12 @@ function isStandalone(){
  return window.matchMedia&&window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone===true;
 }
 function safeName(s){return String(s||'').replace(/[\\\/:*?"<>|]/g,'-').trim()}
+function ukDate(iso){
+ if(!iso)return '';
+ let d=new Date(iso+'T00:00:00');
+ if(isNaN(d))return iso;
+ return d.toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric'});
+}
 function printJob(no){
  if(isStandalone()){
   // iOS (and some Android) home-screen apps block window.print() entirely with no error —
@@ -456,7 +479,7 @@ async function shareToOneDrive(no){
 function emailJob(no){
  let j=jobs.find(x=>x.job===no);if(!j)return;
  let subject=encodeURIComponent('Job Sheet '+j.job+' - '+j.customer);
- let body=encodeURIComponent('Job Sheet '+j.job+'\nCustomer: '+j.customer+'\nSite: '+j.site+'\nDate: '+j.date+'\n\nPlease attach the PDF generated using Download PDF.');
+ let body=encodeURIComponent('Job Sheet '+j.job+'\nCustomer: '+j.customer+'\nSite: '+j.site+'\nDate: '+ukDate(j.date)+'\n\nPlease attach the PDF generated using Download PDF.');
  let mailtoUrl='mailto:'+(j.email||'')+'?subject='+subject+'&body='+body;
  // location.href can silently no-op inside a home-screen PWA's webview; clicking a real
  // anchor element is the more reliable way to hand the mailto: link off to the Mail app.
