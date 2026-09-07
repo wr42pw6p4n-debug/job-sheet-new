@@ -63,10 +63,10 @@ loadWithFallback(['https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.mi
 </script>
 </head>
 <body>
-<header class="no-print"><div class="head"><div style="display:flex;align-items:center;gap:10px"><img src="logo-header.png" alt="Key Engineering logo" style="height:38px;width:auto;flex-shrink:0"><h1>Key Engineering Chesterfield LTD — Job Manager <span style="font-size:11px;font-weight:400;opacity:.55">build 2026-09-05.1</span></h1></div><span id="counter"></span></div></header>
+<header class="no-print"><div class="head"><div style="display:flex;align-items:center;gap:10px"><img src="logo-header.png" alt="Key Engineering logo" style="height:38px;width:auto;flex-shrink:0"><h1>Key Engineering Chesterfield LTD — Job Manager <span style="font-size:11px;font-weight:400;opacity:.55">build 2026-09-05.2</span></h1></div><span id="counter"></span></div></header>
 <div class="wrap">
 <div class="nav no-print">
-<button class="primary" onclick="newJob()">＋ New Job</button><button onclick="home()">Jobs</button><button onclick="customersPage()">Customers</button>
+<button class="primary" onclick="newJob()">＋ New Job</button><button onclick="home()">Jobs</button><button onclick="customersPage()">Customers</button><button onclick="engineersPage()">Engineers</button>
 </div>
 
 <section id="home" class="card no-print">
@@ -125,6 +125,12 @@ loadWithFallback(['https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.mi
 <input id="custSearch" placeholder="Search customers…" oninput="renderCustomers()">
 <div id="customerView"></div>
 </section>
+<section id="engineers" class="card no-print hidden">
+<h2>Engineers</h2>
+<div class="muted" style="margin-bottom:8px">Rename or remove engineers from the picker used on job sheets. This doesn't change engineers already recorded on past jobs.</div>
+<div id="engineerView"></div>
+<div class="actions" style="margin-top:10px"><input id="newEngineerName" placeholder="New engineer name" style="flex:1" onkeydown="if(event.key==='Enter')addEngineer()"><button class="primary" onclick="addEngineer()">+ Add</button></div>
+</section>
 <section id="detail" class="card hidden"></section>
 </div>
 
@@ -142,11 +148,18 @@ if(!Array.isArray(jobs)){
 let savedCustomers=[];
 try{savedCustomers=JSON.parse(localStorage.getItem('rkey_customers')||'[]');if(!Array.isArray(savedCustomers))savedCustomers=[]}catch(e){savedCustomers=[]}
 let customers=[...new Set([...savedCustomers,...SEED.customers])];
-let engineers=SEED.engineers;
+let engineers=(()=>{
+ try{
+  let saved=JSON.parse(localStorage.getItem('rkey_engineers')||'null');
+  if(Array.isArray(saved)&&saved.length)return saved;
+ }catch(e){}
+ return SEED.engineers.slice();
+})();
+function saveEngineers(){localStorage.setItem('rkey_engineers',JSON.stringify(engineers))}
 let types=[...new Set(['Repair','Service','Office Work','Test','Inspection','Survey','Delivery','Quotation','Installation','Crane build',...SEED.types])];
 let timeRows=[],matRows=[];
 function esc(v){return String(v??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]))}
-function hide(){['home','form','customers','detail'].forEach(x=>document.getElementById(x).classList.add('hidden'))}
+function hide(){['home','form','customers','engineers','detail'].forEach(x=>document.getElementById(x).classList.add('hidden'))}
 function home(){hide();document.getElementById('home').classList.remove('hidden');renderJobs()}
 function nextJob(){let n=jobs.map(j=>parseInt(j.job,10)).filter(Number.isFinite);return String((n.length?Math.max(...n):0)+1)}
 function setupLists(){customerOptions.innerHTML=customers.map(x=>`<option value="${esc(x)}"></option>`).join('');document.getElementById('engineerOptions').innerHTML=engineers.map(x=>`<option value="${esc(x)}"></option>`).join('');document.getElementById('f_type').innerHTML=types.map(x=>`<option>${esc(x)}</option>`).join('');
@@ -303,6 +316,30 @@ function renderJobs(){
 }
 let editingCustomer=null;
 function customersPage(){hide();document.getElementById('customers').classList.remove('hidden');renderCustomers()}
+function engineersPage(){hide();document.getElementById('engineers').classList.remove('hidden');renderEngineers()}
+function renderEngineers(){
+ document.getElementById('engineerView').innerHTML=engineers.length?engineers.map((name,i)=>`
+  <div class="custrow" style="cursor:default">
+   <input value="${esc(name)}" onchange="renameEngineer(${i},this.value)" style="flex:1;margin-right:8px">
+   <button onclick="removeEngineer(${i})" class="danger">Remove</button>
+  </div>`).join(''):'<p class="muted">No engineers yet.</p>';
+}
+function renameEngineer(i,newName){
+ newName=newName.trim();
+ if(!newName){renderEngineers();return}
+ if(engineers.some((e,j)=>j!==i&&e.toLowerCase()===newName.toLowerCase())){alert('That name is already on the list.');renderEngineers();return}
+ engineers[i]=newName;saveEngineers();setupLists();renderEngineers();
+}
+function removeEngineer(i){
+ if(!confirm('Remove "'+engineers[i]+'" from the engineer picker? This won\'t change any past job records.'))return;
+ engineers.splice(i,1);saveEngineers();setupLists();renderEngineers();
+}
+function addEngineer(){
+ let input=document.getElementById('newEngineerName');
+ let name=input.value.trim();if(!name)return;
+ if(engineers.some(e=>e.toLowerCase()===name.toLowerCase())){alert('That engineer is already on the list.');return}
+ engineers.push(name);saveEngineers();input.value='';setupLists();renderEngineers();
+}
 function renderCustomers(){
  let q=(document.getElementById('custSearch').value||'').toLowerCase();
  let list=customers.filter(c=>c.toLowerCase().includes(q)).sort((a,b)=>a.localeCompare(b));
