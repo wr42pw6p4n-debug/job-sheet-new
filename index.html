@@ -31,6 +31,9 @@ hr{border:0;border-top:1px solid #d2d8dd;margin:18px 0}
 .footer{font-size:8px;text-align:center;margin-top:7px}
 .sig-label{font-weight:300}
 .custrow{display:flex;justify-content:space-between;align-items:center;gap:10px;border:1px solid #d5dce1;border-radius:8px;padding:12px;margin:7px 0;cursor:pointer}
+.calloutbtn{border:2px solid #c0392b;color:#c0392b;background:#fff;border-radius:8px;padding:8px 14px;font-weight:700;font-size:13px;cursor:pointer}
+.calloutbtn.active{background:#c0392b;color:#fff;box-shadow:0 0 0 3px #f5c2ba}
+.callout-badge{display:inline-block;background:#c0392b;color:#fff;font-weight:700;font-size:12px;border-radius:6px;padding:3px 9px;margin-left:10px;vertical-align:middle}
 .custrow:hover{background:#f5f8fb}
 .custedit{border:1px solid #d5dce1;border-radius:8px;padding:12px;margin:7px 0;background:#f9fbfc}
 button[disabled]{opacity:.55;cursor:wait}
@@ -63,7 +66,7 @@ loadWithFallback(['https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.mi
 </script>
 </head>
 <body>
-<header class="no-print"><div class="head"><div style="display:flex;align-items:center;gap:10px"><img src="logo-header.png" alt="Key Engineering logo" style="height:38px;width:auto;flex-shrink:0"><h1>Key Engineering Chesterfield LTD — Job Manager <span style="font-size:11px;font-weight:400;opacity:.55">build 2026-09-05.2</span></h1></div><span id="counter"></span></div></header>
+<header class="no-print"><div class="head"><div style="display:flex;align-items:center;gap:10px"><img src="logo-header.png" alt="Key Engineering logo" style="height:38px;width:auto;flex-shrink:0"><h1>Key Engineering Chesterfield LTD — Job Manager <span style="font-size:11px;font-weight:400;opacity:.55">build 2026-09-05.4</span></h1></div><span id="counter"></span></div></header>
 <div class="wrap">
 <div class="nav no-print">
 <button class="primary" onclick="newJob()">＋ New Job</button><button onclick="home()">Jobs</button><button onclick="customersPage()">Customers</button><button onclick="engineersPage()">Engineers</button>
@@ -85,7 +88,7 @@ loadWithFallback(['https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.mi
 <div><label>Customer / Company</label><input id="f_customer" list="customerOptions" oninput="customerChanged()"><datalist id="customerOptions"></datalist></div>
 <div><label>Customer Email</label><input id="f_email" type="email" placeholder="name@company.com"></div>
 <div><label>Type of Work</label><select id="f_type"></select></div>
-<div><label>Location / Site</label><input id="f_site"></div>
+<div><label>Location / Site</label><input id="f_site" onchange="autoFillMileage()"></div>
 <div><label>Site Contact(s)</label><input id="f_contact"></div>
 <div><label>Date</label><input id="f_date" type="date"></div>
 <div><label>Status</label><select id="f_status"><option>Open</option><option>In Progress</option><option>Complete</option></select></div>
@@ -99,7 +102,7 @@ loadWithFallback(['https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.mi
 <hr>
 <label>Report of Work Carried Out / Comments</label><textarea id="f_comments"></textarea>
 <hr>
-<h3>Time, Expenses & Mileage</h3>
+<div style="display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:14px"><h3 style="margin:0">Time, Expenses & Mileage</h3><button type="button" id="calloutBtn" class="calloutbtn no-print" onclick="toggleCallout()">⚡ Call-out</button></div>
 <div id="timeRows"></div>
 <button class="secondary" onclick="addTimeRow()">＋ Add Date</button>
 <hr>
@@ -158,6 +161,13 @@ let engineers=(()=>{
 function saveEngineers(){localStorage.setItem('rkey_engineers',JSON.stringify(engineers))}
 let types=[...new Set(['Repair','Service','Office Work','Test','Inspection','Survey','Delivery','Quotation','Installation','Crane build',...SEED.types])];
 let timeRows=[],matRows=[];
+let calloutActive=false;
+function toggleCallout(){calloutActive=!calloutActive;updateCalloutBtn()}
+function updateCalloutBtn(){
+ let btn=document.getElementById('calloutBtn');if(!btn)return;
+ btn.classList.toggle('active',calloutActive);
+ btn.textContent=calloutActive?'⚡ Call-out ✓':'⚡ Call-out';
+}
 function esc(v){return String(v??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]))}
 function hide(){['home','form','customers','engineers','detail'].forEach(x=>document.getElementById(x).classList.add('hidden'))}
 function home(){hide();document.getElementById('home').classList.remove('hidden');renderJobs()}
@@ -179,6 +189,7 @@ function newJob(){
  editingJobNo=null;document.getElementById('formHeading').textContent='New Job Order';
  ['f_order','f_customer','f_customerSelect','f_email','f_site','f_contact','e1','e2','e3','e4','f_comments','custName','custPosition'].forEach(x=>document.getElementById(x).value='');
  timeRows=[];matRows=[];addTimeRow();renderMaterials();clearSig('customerSig');clearSig('engineerSig');
+ calloutActive=false;updateCalloutBtn();
 }
 let editingJobNo=null;
 function editJob(no){
@@ -202,6 +213,7 @@ function editJob(no){
  timeRows=(j.time||[]).map(r=>({...r}));if(!timeRows.length)timeRows.push({date:j.date||new Date().toISOString().slice(0,10),nt:'',ot:'',dt:'',mile:'',eid:''});
  matRows=(j.materials||[]).map(desc=>({desc}));
  renderTime();renderMaterials();
+ calloutActive=!!j.callout;updateCalloutBtn();
  clearSig('customerSig');clearSig('engineerSig');
  setTimeout(()=>{
   if(j.customerSig){let img=new Image();img.onload=()=>{let c=document.getElementById('customerSig');c.getContext('2d').drawImage(img,0,0,c.width,c.height)};img.src=j.customerSig}
@@ -227,6 +239,7 @@ function customerChanged(){
  document.getElementById('f_site').value=info.site;
  document.getElementById('f_contact').value=info.contact;
  document.getElementById('f_email').value=info.email;
+ autoFillMileage();
 }
 // Looks up an existing job sheet (imported history or previously saved) by Job No. or
 // Customer Order No. and scrapes its description (Type of Work) and Date, plus the
@@ -240,6 +253,7 @@ function fillFromOriginalJobSheet(match){
  customerChanged();
  if(!document.getElementById('f_site').value&&match.site)document.getElementById('f_site').value=match.site;
  if(!document.getElementById('f_contact').value&&match.contact)document.getElementById('f_contact').value=match.contact;
+ autoFillMileage();
 }
 function jobNumberChanged(){
  let jobNo=document.getElementById('f_job').value.trim();if(!jobNo)return;
@@ -280,7 +294,7 @@ function saveJob(){
   contact:v('f_contact'),email:v('f_email').trim(),date:v('f_date'),status:v('f_status'),type:v('f_type'),
   engineers:['e1','e2','e3','e4'].map(v).filter(Boolean),
   comments:v('f_comments'),time:timeRows,materials:matRows.map(x=>x.desc).filter(Boolean),
-  customerName:v('custName'),customerPosition:v('custPosition'),
+  customerName:v('custName'),customerPosition:v('custPosition'),callout:calloutActive,
   customerSig:document.getElementById('customerSig').toDataURL(),
   engineerSig:document.getElementById('engineerSig').toDataURL(),
   created:new Date().toISOString()
@@ -311,7 +325,7 @@ function saveJob(){
 function renderJobs(){
  let q=(search.value||'').toLowerCase(),a=jobs.filter(j=>JSON.stringify(j).toLowerCase().includes(q)).sort((a,b)=>b.created.localeCompare(a.created));
  document.getElementById('stats').innerHTML=`<span class="stat">Total: ${jobs.length}</span><span class="stat">Open: ${jobs.filter(x=>x.status==='Open').length}</span><span class="stat">Complete: ${jobs.filter(x=>x.status==='Complete').length}</span>`;
- document.getElementById('jobList').innerHTML=a.length?a.map(j=>`<div class="jobrow"><div><b>Job ${esc(j.job)}</b> — ${esc(j.customer)}<div class="muted">${esc(j.site)} · ${esc(ukDate(j.date))} · ${esc(j.type)}</div></div><div class="actions"><span class="pill">${esc(j.status)}</span><button onclick="openJob('${esc(j.job)}')">Open</button></div></div>`).join(''):'<p class="muted">No jobs yet. Tap New Job.</p>';
+ document.getElementById('jobList').innerHTML=a.length?a.map(j=>`<div class="jobrow"><div><b>Job ${esc(j.job)}</b> — ${esc(j.customer)}${j.callout?'<span class="callout-badge">CALL-OUT</span>':''}<div class="muted">${esc(j.site)} · ${esc(ukDate(j.date))} · ${esc(j.type)}</div></div><div class="actions"><span class="pill">${esc(j.status)}</span><button onclick="openJob('${esc(j.job)}')">Open</button></div></div>`).join(''):'<p class="muted">No jobs yet. Tap New Job.</p>';
  document.getElementById('counter').textContent=jobs.length+' jobs'
 }
 let editingCustomer=null;
@@ -388,7 +402,8 @@ function openJob(no){
  <button onclick="emailJob('${esc(j.job)}')">✉ Email</button>
  <button onclick="editJob('${esc(j.job)}')">✎ Edit</button>
  <button onclick="deleteJob('${esc(j.job)}')" class="danger">Delete</button></div>
- <div class="no-print muted" id="shareHint" style="margin:-6px 0 12px 2px;font-size:12px"></div>
+ <div class="no-print muted" id="shareHint" style="margin:-6px 0 4px 2px;font-size:12px"></div>
+ <div class="no-print muted" style="margin:0 0 12px 2px;font-size:12px">Nothing happen when you tapped Print? <a href="#" onclick="event.preventDefault();openInBrowserToPrint('${esc(j.job)}')">Tap here to open in your browser and print</a>.</div>
  <div class="job-sheet">
  <div class="company" style="display:flex;align-items:center;gap:12px">
  <img src="logo-header.png" alt="Key Engineering logo" style="height:52px;width:auto;flex-shrink:0">
@@ -398,7 +413,7 @@ function openJob(no){
  Lifting Tackle Supplies & Inspection ● Fork Lift Truck Hire, Sales Services & Repair<br>
  Tel/Fax: 01246 413524 &nbsp; Mobile: 07971 222574 &nbsp; Email: rkeyengineering@hotmail.co.uk</div>
  </div>
- <div class="title">JOB SHEET</div>
+ <div class="title">JOB SHEET${j.callout?'<span class="callout-badge">CALL-OUT</span>':''}</div>
  <table class="info">
  <tr><th>Job No.</th><td>${esc(j.job)}</td><th>Customer Order No.</th><td>${esc(j.order)}</td></tr>
  <tr><th>Customer/Company</th><td>${esc(j.customer)}${j.email?'<br><span style="font-weight:400;font-size:9px">'+esc(j.email)+'</span>':''}</td><th>Engineer(s) in Attendance</th><td>${esc(j.engineers.join(', '))}</td></tr>
@@ -439,15 +454,15 @@ function ukDate(iso){
  return d.toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric'});
 }
 function printJob(no){
- if(isStandalone()){
-  // iOS (and some Android) home-screen apps block window.print() entirely with no error —
-  // it just silently does nothing. Opening the job in a normal browser tab works around this.
-  let url=new URL(location.href);
-  url.hash='';url.search='?print='+encodeURIComponent(no);
-  window.open(url.toString(),'_blank');
-  return;
- }
+ // Always try the direct route first — this is the standard, reliable path in a normal
+ // browser tab. If the app was added to the home screen, iOS/Android can silently ignore
+ // this with no error at all, which is what the "open in browser" link below is for.
  window.print();
+}
+function openInBrowserToPrint(no){
+ let url=new URL(location.href);
+ url.hash='';url.search='?print='+encodeURIComponent(no);
+ window.open(url.toString(),'_blank');
 }
 async function generatePdfBlob(no){
  let j=jobs.find(x=>x.job===no);if(!j)return null;
@@ -523,6 +538,48 @@ function emailJob(no){
  let a=document.createElement('a');a.href=mailtoUrl;a.style.display='none';
  document.body.appendChild(a);a.click();
  setTimeout(()=>a.remove(),1000);
+}
+// ---- Automatic mileage calculation (optional) ----
+// Works out the round-trip driving distance from the office to the job site and fills
+// it into the Mileage box quietly in the background — no button, no visible loading
+// state, it just appears once it's found. Uses Mapbox's geocoding + directions APIs,
+// which are free for normal use. To switch this on:
+// 1. Create a free account at https://www.mapbox.com (no card needed)
+// 2. Copy your "Default public token" from your Account page
+// 3. Paste it below. Change OFFICE_ADDRESS too if the office ever moves.
+const MAPBOX_TOKEN='';
+const OFFICE_ADDRESS='The Bungalow, Whittington Lane, Unstone, Dronfield, S18 4DQ';
+const mileageCache={};
+async function geocodeAddress(address){
+ let res=await fetch('https://api.mapbox.com/geocoding/v5/mapbox.places/'+encodeURIComponent(address)+'.json?country=GB&limit=1&access_token='+MAPBOX_TOKEN);
+ let data=await res.json();
+ return(data.features&&data.features[0])?data.features[0].center:null; // [lng,lat]
+}
+async function roundTripMiles(destAddress){
+ let key=destAddress.trim().toLowerCase();
+ if(mileageCache[key]!==undefined)return mileageCache[key];
+ try{
+  let [origin,dest]=await Promise.all([geocodeAddress(OFFICE_ADDRESS),geocodeAddress(destAddress)]);
+  if(!origin||!dest){mileageCache[key]=null;return null}
+  let res=await fetch('https://api.mapbox.com/directions/v5/mapbox/driving/'+origin[0]+','+origin[1]+';'+dest[0]+','+dest[1]+'?access_token='+MAPBOX_TOKEN);
+  let data=await res.json();
+  if(data.routes&&data.routes[0]){
+   let miles=Math.round((data.routes[0].distance/1609.34)*2*10)/10; // there-and-back, 1dp
+   mileageCache[key]=miles;
+   return miles;
+  }
+ }catch(e){console.warn('Mileage lookup failed:',e)}
+ mileageCache[key]=null;
+ return null;
+}
+async function autoFillMileage(){
+ let site=document.getElementById('f_site').value.trim();
+ if(!site||!MAPBOX_TOKEN)return; // not configured yet — leave the box for manual entry
+ let miles=await roundTripMiles(site);
+ if(miles==null)return;
+ let changed=false;
+ timeRows.forEach(r=>{if(!r.mile){r.mile=String(miles);changed=true}});
+ if(changed&&document.getElementById('f_site'))renderTime();
 }
 // ---- Automatic "Job Complete" email (optional) ----
 // This is a static site with no server, so a truly silent auto-send needs a third-party

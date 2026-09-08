@@ -1,8 +1,15 @@
-const CACHE = "rkey-job-manager-v4";
+const CACHE = "rkey-job-manager-v5";
 const ASSETS = ["./", "./index.html", "./manifest.webmanifest", "./icon-192.png", "./icon-512.png", "./logo-header.png"];
 
 self.addEventListener("install", event => {
-  event.waitUntil(caches.open(CACHE).then(cache => cache.addAll(ASSETS)).then(() => self.skipWaiting()));
+  event.waitUntil(
+    caches.open(CACHE).then(cache =>
+      // Precache each asset independently — if one fails (missing file, blip, etc.)
+      // the whole update no longer silently fails to install. That silent failure is
+      // exactly what was causing earlier fixes to never actually reach the device.
+      Promise.all(ASSETS.map(url => cache.add(url).catch(err => console.warn("Precache skipped for", url, err))))
+    ).then(() => self.skipWaiting())
+  );
 });
 
 self.addEventListener("activate", event => {
