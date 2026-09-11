@@ -66,7 +66,7 @@ loadWithFallback(['https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.mi
 </script>
 </head>
 <body>
-<header class="no-print"><div class="head"><div style="display:flex;align-items:center;gap:10px"><img src="logo-header.png" alt="Key Engineering logo" style="height:38px;width:auto;flex-shrink:0"><h1>Key Engineering Chesterfield LTD — Job Manager <span style="font-size:11px;font-weight:400;opacity:.55">build 2026-09-10.1</span></h1></div><span id="counter"></span></div></header>
+<header class="no-print"><div class="head"><div style="display:flex;align-items:center;gap:10px"><img src="logo-header.png" alt="Key Engineering logo" style="height:38px;width:auto;flex-shrink:0"><h1>Key Engineering Chesterfield LTD — Job Manager <span style="font-size:11px;font-weight:400;opacity:.55">build 2026-09-10.2</span></h1></div><span id="counter"></span></div></header>
 <div class="wrap">
 <div class="nav no-print">
 <button class="primary" onclick="newJob()">＋ New Job</button><button onclick="home()">Jobs</button><button onclick="customersPage()">Customers</button><button onclick="engineersPage()">Engineers</button>
@@ -150,7 +150,10 @@ if(!Array.isArray(jobs)){
 }
 let savedCustomers=[];
 try{savedCustomers=JSON.parse(localStorage.getItem('rkey_customers')||'[]');if(!Array.isArray(savedCustomers))savedCustomers=[]}catch(e){savedCustomers=[]}
-let customers=[...new Set([...savedCustomers,...SEED.customers])];
+let deletedCustomers=[];
+try{deletedCustomers=JSON.parse(localStorage.getItem('rkey_deleted_customers')||'[]');if(!Array.isArray(deletedCustomers))deletedCustomers=[]}catch(e){deletedCustomers=[]}
+function saveDeletedCustomers(){localStorage.setItem('rkey_deleted_customers',JSON.stringify(deletedCustomers))}
+let customers=[...new Set([...savedCustomers,...SEED.customers])].filter(c=>!deletedCustomers.includes(c.trim().toLowerCase()));
 let engineers=(()=>{
  try{
   let saved=JSON.parse(localStorage.getItem('rkey_engineers')||'null');
@@ -318,6 +321,8 @@ function saveJob(){
   jobs.push(j);
  }
  customers=[...new Set([...customers,j.customer])];
+ let jKey=j.customer.trim().toLowerCase();
+ if(deletedCustomers.includes(jKey)){deletedCustomers=deletedCustomers.filter(x=>x!==jKey);saveDeletedCustomers()}
  localStorage.setItem('rkey_jobs',JSON.stringify(jobs));
  localStorage.setItem('rkey_customers',JSON.stringify(customers));
  if(j.site||j.contact||j.email){
@@ -368,7 +373,8 @@ function renderCustomers(){
   let info=getCustomerInfo(c);
   let rowHtml=`<div class="custrow"><div onclick="selectCustomer('${esc(c).replace(/'/g,"\\'")}')" style="flex:1"><b>${esc(c)}</b>
    <div class="muted">${esc(info.site)||'No site saved'}${info.contact?' · '+esc(info.contact):''}${info.email?' · '+esc(info.email):''}</div></div>
-   <button onclick="event.stopPropagation();toggleEditCustomer('${esc(c).replace(/'/g,"\\'")}')">✎ Edit</button></div>`;
+   <button onclick="event.stopPropagation();toggleEditCustomer('${esc(c).replace(/'/g,"\\'")}')">✎ Edit</button>
+   <button onclick="event.stopPropagation();deleteCustomer('${esc(c).replace(/'/g,"\\'")}')" class="danger">🗑 Delete</button></div>`;
   if(editingCustomer===c){
    rowHtml+=`<div class="custedit">
     <div class="grid">
@@ -385,6 +391,16 @@ function renderCustomers(){
  }).join(''):'<p class="muted">No customers found.</p>';
 }
 function toggleEditCustomer(name){editingCustomer=(editingCustomer===name?null:name);renderCustomers()}
+function deleteCustomer(name){
+ if(!confirm('Remove "'+name+'" from the customers list?\n\nThis just hides it from the picker and search — it won\'t change anything already recorded on past job sheets.'))return;
+ let key=name.trim().toLowerCase();
+ customers=customers.filter(c=>c.trim().toLowerCase()!==key);
+ localStorage.setItem('rkey_customers',JSON.stringify(customers));
+ if(!deletedCustomers.includes(key)){deletedCustomers.push(key);saveDeletedCustomers()}
+ if(customerRecords[key]){delete customerRecords[key];saveCustomerRecords()}
+ if(editingCustomer===name)editingCustomer=null;
+ setupLists();renderCustomers();
+}
 function saveCustomerEdit(name){
  let key=name.trim().toLowerCase();
  customerRecords[key]={name:name,site:document.getElementById('ec_site').value,contact:document.getElementById('ec_contact').value,email:document.getElementById('ec_email').value.trim()};
