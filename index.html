@@ -25,6 +25,7 @@ hr{border:0;border-top:1px solid #d2d8dd;margin:18px 0}
 .company{text-align:center;border:1px solid #111;padding:7px;font-size:10px;line-height:1.35}.company strong{font-size:14px}
 .title{border:2px solid #111;border-top:0;text-align:center;font-weight:bold;font-size:22px;padding:9px}
 .info{width:100%;border-collapse:collapse;margin-top:9px;font-size:11px}.info th,.info td{border:1px solid #111;padding:6px;vertical-align:top}.info th{background:#e8e8e8;text-align:left;width:18%}
+.hourstable{width:100%;border-collapse:collapse;margin-top:6px;font-size:14px}.hourstable th,.hourstable td{border:1px solid #d5dce1;padding:9px 10px;text-align:left}.hourstable th{background:#f2f5f7}
 .section{background:#dedede;border:1px solid #111;border-bottom:0;font-size:11px;font-weight:bold;padding:6px;margin-top:9px}.box{border:1px solid #111;min-height:115px;padding:7px;font-size:11px;white-space:pre-wrap}
 .time th,.time td{text-align:center}.time input{border:0;padding:0;text-align:center;background:transparent}.time input:focus{outline:1px solid #1769aa}
 .cert{font-size:10px;border:1px solid #111;padding:7px;min-height:90px}.signprint{height:55px;border-bottom:1px solid #111;margin-top:4px}
@@ -66,7 +67,7 @@ loadWithFallback(['https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.mi
 </script>
 </head>
 <body>
-<header class="no-print"><div class="head"><div style="display:flex;align-items:center;gap:10px"><img src="logo-header.png" alt="Key Engineering logo" style="height:38px;width:auto;flex-shrink:0"><h1>Key Engineering Chesterfield LTD — Job Manager <span style="font-size:11px;font-weight:400;opacity:.55">build 2026-09-10.2</span></h1></div><span id="counter"></span></div></header>
+<header class="no-print"><div class="head"><div style="display:flex;align-items:center;gap:10px"><img src="logo-header.png" alt="Key Engineering logo" style="height:38px;width:auto;flex-shrink:0"><h1>Key Engineering Chesterfield LTD — Job Manager <span style="font-size:11px;font-weight:400;opacity:.55">build 2026-09-10.5</span></h1></div><span id="counter"></span></div></header>
 <div class="wrap">
 <div class="nav no-print">
 <button class="primary" onclick="newJob()">＋ New Job</button><button onclick="home()">Jobs</button><button onclick="customersPage()">Customers</button><button onclick="engineersPage()">Engineers</button>
@@ -134,6 +135,22 @@ loadWithFallback(['https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.mi
 <div id="engineerView"></div>
 <div class="actions" style="margin-top:10px"><input id="newEngineerName" placeholder="New engineer name" style="flex:1" onkeydown="if(event.key==='Enter')addEngineer()"><button class="primary" onclick="addEngineer()">+ Add</button></div>
 </section>
+<section id="hours" class="card hidden">
+<button class="no-print" onclick="engineersPage()" style="margin-bottom:10px">← Back to Engineers</button>
+<div class="no-print" style="margin-bottom:10px;display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+ <label style="margin-right:4px">Week starting</label>
+ <input type="date" id="hoursWeekPick" onchange="renderHoursCard()">
+ <button onclick="shiftHoursWeek(-7)">◀ Prev week</button>
+ <button onclick="shiftHoursWeek(7)">Next week ▶</button>
+ <button class="primary" onclick="downloadHoursPdf()">⬇ Download PDF</button>
+</div>
+<div id="hoursPrintArea">
+ <h2 id="hoursHeading">Weekly Hours</h2>
+ <div id="hoursWeekLabel" style="font-weight:700;font-size:16px;margin-bottom:6px"></div>
+ <div class="muted no-print" style="margin-bottom:10px;font-size:12px">Totals are pulled straight from every job sheet's time entries that fall in this week (Mon–Sun), grouped by whichever engineer is set on each row — or the first engineer listed on the job if a row doesn't specify one. Call-outs shows how many call-out jobs each engineer attended that week.</div>
+ <div id="hoursCardBody"></div>
+</div>
+</section>
 <section id="detail" class="card hidden"></section>
 </div>
 
@@ -172,7 +189,7 @@ function updateCalloutBtn(){
  btn.textContent=calloutActive?'⚡ Call-out ✓':'⚡ Call-out';
 }
 function esc(v){return String(v??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]))}
-function hide(){['home','form','customers','engineers','detail'].forEach(x=>document.getElementById(x).classList.add('hidden'))}
+function hide(){['home','form','customers','engineers','hours','detail'].forEach(x=>document.getElementById(x).classList.add('hidden'))}
 function home(){hide();document.getElementById('home').classList.remove('hidden');renderJobs()}
 function nextJob(){let n=jobs.map(j=>parseInt(j.job,10)).filter(Number.isFinite);return String((n.length?Math.max(...n):0)+1)}
 function setupLists(){customerOptions.innerHTML=customers.map(x=>`<option value="${esc(x)}"></option>`).join('');document.getElementById('engineerOptions').innerHTML=engineers.map(x=>`<option value="${esc(x)}"></option>`).join('');document.getElementById('f_type').innerHTML=types.map(x=>`<option>${esc(x)}</option>`).join('');
@@ -343,12 +360,79 @@ function renderJobs(){
 let editingCustomer=null;
 function customersPage(){hide();document.getElementById('customers').classList.remove('hidden');renderCustomers()}
 function engineersPage(){hide();document.getElementById('engineers').classList.remove('hidden');renderEngineers()}
+let hoursEngineerFilter=null;
+let currentHoursWeekStart='';
+function viewEngineerHours(name){
+ hide();document.getElementById('hours').classList.remove('hidden');
+ hoursEngineerFilter=name;
+ let pick=document.getElementById('hoursWeekPick');
+ if(!pick.value)pick.value=hoursWeekRange(new Date().toISOString().slice(0,10)).start.toISOString().slice(0,10);
+ renderHoursCard();
+}
+function hoursWeekRange(anyDateStr){
+ let d=new Date(anyDateStr+'T00:00:00');
+ if(isNaN(d))d=new Date();
+ let daysSinceMonday=(d.getDay()+6)%7; // Mon=0 ... Sun=6
+ let mon=new Date(d);mon.setDate(d.getDate()-daysSinceMonday);
+ let sun=new Date(mon);sun.setDate(mon.getDate()+6);
+ return{start:mon,end:sun};
+}
+function shiftHoursWeek(days){
+ let pick=document.getElementById('hoursWeekPick');
+ let cur=hoursWeekRange(pick.value||new Date().toISOString().slice(0,10)).start;
+ cur.setDate(cur.getDate()+days);
+ pick.value=cur.toISOString().slice(0,10);
+ renderHoursCard();
+}
+function renderHoursCard(){
+ let pickVal=document.getElementById('hoursWeekPick').value||new Date().toISOString().slice(0,10);
+ let{start,end}=hoursWeekRange(pickVal);
+ let startStr=start.toISOString().slice(0,10),endStr=end.toISOString().slice(0,10);
+ currentHoursWeekStart=startStr;
+ document.getElementById('hoursWeekPick').value=startStr; // snap the picker itself to the Monday of that week
+ document.getElementById('hoursHeading').textContent=hoursEngineerFilter?hoursEngineerFilter+"'s Hours":'Weekly Hours';
+ document.getElementById('hoursWeekLabel').textContent='Week starting '+ukDate(startStr)+' (to '+ukDate(endStr)+')';
+ let totals={};
+ jobs.forEach(j=>{
+  (j.time||[]).forEach(r=>{
+   if(!r.date||r.date<startStr||r.date>endStr)return;
+   let eng=(r.eid||'').trim()||(j.engineers&&j.engineers[0])||'Unassigned';
+   if(hoursEngineerFilter&&eng.toLowerCase()!==hoursEngineerFilter.toLowerCase())return;
+   if(!totals[eng])totals[eng]={nt:0,ot:0,dt:0,mile:0,callouts:new Set()};
+   totals[eng].nt+=(+r.nt||0);totals[eng].ot+=(+r.ot||0);totals[eng].dt+=(+r.dt||0);totals[eng].mile+=(+r.mile||0);
+   if(j.callout)totals[eng].callouts.add(j.job);
+  });
+ });
+ let names=Object.keys(totals).sort((a,b)=>a.localeCompare(b));
+ document.getElementById('hoursCardBody').innerHTML=names.length?`<table class="hourstable">
+  <tr><th>Engineer</th><th>N/T</th><th>O/T</th><th>D/T</th><th>Total Hrs</th><th>Call-outs</th><th>Mileage</th></tr>
+  ${names.map(n=>{let t=totals[n];let tot=t.nt+t.ot+t.dt;return`<tr><td>${esc(n)}</td><td>${t.nt.toFixed(2)}</td><td>${t.ot.toFixed(2)}</td><td>${t.dt.toFixed(2)}</td><td><b>${tot.toFixed(2)}</b></td><td>${t.callouts.size||0}</td><td>${t.mile?Math.round(t.mile):0}</td></tr>`}).join('')}
+ </table>`:`<p class="muted">No hours recorded for ${hoursEngineerFilter?esc(hoursEngineerFilter):'anyone'} this week.</p>`;
+}
+let editingEngineerIdx=null;
 function renderEngineers(){
- document.getElementById('engineerView').innerHTML=engineers.length?engineers.map((name,i)=>`
-  <div class="custrow" style="cursor:default">
-   <input value="${esc(name)}" onchange="renameEngineer(${i},this.value)" style="flex:1;margin-right:8px">
-   <button onclick="removeEngineer(${i})" class="danger">Remove</button>
-  </div>`).join(''):'<p class="muted">No engineers yet.</p>';
+ document.getElementById('engineerView').innerHTML=engineers.length?engineers.map((name,i)=>{
+  let rowHtml=`<div class="custrow">
+   <div onclick="viewEngineerHours('${esc(name).replace(/'/g,"\\'")}')" style="flex:1"><b>${esc(name)}</b><div class="muted">Tap to see their hours</div></div>
+   <button onclick="event.stopPropagation();toggleEditEngineer(${i})">✎ Edit</button>
+   <button onclick="event.stopPropagation();removeEngineer(${i})" class="danger">Remove</button>
+  </div>`;
+  if(editingEngineerIdx===i){
+   rowHtml+=`<div class="custedit">
+    <div><label>Name</label><input id="ee_name" value="${esc(name)}"></div>
+    <div class="actions" style="margin-top:8px">
+     <button class="primary" onclick="saveEngineerEdit(${i})">Save</button>
+     <button onclick="editingEngineerIdx=null;renderEngineers()">Cancel</button>
+    </div></div>`;
+  }
+  return rowHtml;
+ }).join(''):'<p class="muted">No engineers yet.</p>';
+}
+function toggleEditEngineer(i){editingEngineerIdx=(editingEngineerIdx===i?null:i);renderEngineers()}
+function saveEngineerEdit(i){
+ let newName=document.getElementById('ee_name').value;
+ editingEngineerIdx=null;
+ renameEngineer(i,newName);
 }
 function renameEngineer(i,newName){
  newName=newName.trim();
@@ -520,6 +604,31 @@ async function generatePdfBlob(no){
  let engPart=safeName(j.engineers.join('+'))||'Unassigned';
  let filename='Job '+safeName(j.job)+' - '+safeName(j.customer)+' - '+safeName(ukDate(j.date))+'.pdf';
  return{blob:pdf.output('blob'),filename,engPart,ws};
+}
+async function downloadHoursPdf(){
+ let card=document.getElementById('hoursPrintArea');
+ if(!card)return;
+ let btn=event&&event.target;let originalLabel=btn?btn.textContent:'';
+ if(btn){btn.disabled=true;btn.textContent='Generating…'}
+ try{
+  let ready=await window.pdfLibsReady;
+  if(!ready||!window.html2canvas||!window.jspdf){alert('Could not load the PDF tools — check your internet connection and try again.');return}
+  let canvas=await html2canvas(card,{scale:2,useCORS:true,backgroundColor:'#ffffff'});
+  let{jsPDF}=window.jspdf;
+  let pdf=new jsPDF('p','mm','a4');
+  let pageW=pdf.internal.pageSize.getWidth(),pageH=pdf.internal.pageSize.getHeight();
+  let imgW=pageW,imgH=canvas.height*imgW/canvas.width;
+  let img=canvas.toDataURL('image/jpeg',0.92);
+  if(imgH<=pageH){pdf.addImage(img,'JPEG',0,0,imgW,imgH)}
+  else{let scale=pageH/imgH;pdf.addImage(img,'JPEG',0,0,imgW*scale,pageH)} // shrink to fit one page — this card is short, never needs multiple pages
+  let namePart=hoursEngineerFilter?safeName(hoursEngineerFilter)+' - ':'';
+  let filename='Weekly Hours - '+namePart+safeName(ukDate(currentHoursWeekStart))+'.pdf';
+  let blob=pdf.output('blob');
+  let url=URL.createObjectURL(blob);
+  let a=document.createElement('a');a.href=url;a.download=filename;document.body.appendChild(a);a.click();a.remove();
+  setTimeout(()=>URL.revokeObjectURL(url),4000);
+ }catch(e){alert('Could not generate the PDF: '+e.message)}
+ finally{if(btn){btn.disabled=false;btn.textContent=originalLabel}}
 }
 async function downloadPdf(no){
  let btn=event&&event.target;let originalLabel=btn?btn.textContent:'';
