@@ -67,7 +67,7 @@ loadWithFallback(['https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.mi
 </script>
 </head>
 <body>
-<header class="no-print"><div class="head"><div style="display:flex;align-items:center;gap:10px"><img src="logo-header.png" alt="Key Engineering logo" style="height:38px;width:auto;flex-shrink:0"><h1>Key Engineering Chesterfield LTD — Job Manager <span style="font-size:11px;font-weight:400;opacity:.55">build 2026-09-10.6</span></h1></div><span id="counter"></span></div></header>
+<header class="no-print"><div class="head"><div style="display:flex;align-items:center;gap:10px"><img src="logo-header.png" alt="Key Engineering logo" style="height:38px;width:auto;flex-shrink:0"><h1>Key Engineering Chesterfield LTD — Job Manager <span style="font-size:11px;font-weight:400;opacity:.55">build 2026-09-10.7</span></h1></div><span id="counter"></span></div></header>
 <div class="wrap">
 <div class="nav no-print">
 <button class="primary" onclick="newJob()">＋ New Job</button><button onclick="home()">Jobs</button><button onclick="customersPage()">Customers</button><button onclick="engineersPage()">Engineers</button>
@@ -384,6 +384,14 @@ function shiftHoursWeek(days){
  pick.value=localDateStr(cur);
  renderHoursCard();
 }
+function engineerNamesMatch(a,b){
+ // Job sheets sometimes have a full name ("Dave Boler") where the engineer picker/filter
+ // only has a first name ("Dave"). Treat those as the same person by comparing first names.
+ a=(a||'').trim().toLowerCase();b=(b||'').trim().toLowerCase();
+ if(!a||!b)return false;
+ if(a===b)return true;
+ return a.split(/\s+/)[0]===b.split(/\s+/)[0];
+}
 function renderHoursCard(){
  let pickVal=document.getElementById('hoursWeekPick').value||localDateStr();
  let{start,end}=hoursWeekRange(pickVal);
@@ -397,7 +405,10 @@ function renderHoursCard(){
   (j.time||[]).forEach(r=>{
    if(!r.date||r.date<startStr||r.date>endStr)return;
    let eng=(r.eid||'').trim()||(j.engineers&&j.engineers[0])||'Unassigned';
-   if(hoursEngineerFilter&&eng.toLowerCase()!==hoursEngineerFilter.toLowerCase())return;
+   if(hoursEngineerFilter){
+    if(!engineerNamesMatch(eng,hoursEngineerFilter))return;
+    eng=hoursEngineerFilter; // collapse "Dave Boler" etc. into the name that was clicked
+   }
    if(!totals[eng])totals[eng]={nt:0,ot:0,dt:0,mile:0,callouts:new Set()};
    totals[eng].nt+=(+r.nt||0);totals[eng].ot+=(+r.ot||0);totals[eng].dt+=(+r.dt||0);totals[eng].mile+=(+r.mile||0);
    if(j.callout)totals[eng].callouts.add(j.job);
