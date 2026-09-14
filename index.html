@@ -67,7 +67,7 @@ loadWithFallback(['https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.mi
 </script>
 </head>
 <body>
-<header class="no-print"><div class="head"><div style="display:flex;align-items:center;gap:10px"><img src="logo-header.png" alt="Key Engineering logo" style="height:38px;width:auto;flex-shrink:0"><h1>Key Engineering Chesterfield LTD — Job Manager <span style="font-size:11px;font-weight:400;opacity:.55">build 2026-09-10.5</span></h1></div><span id="counter"></span></div></header>
+<header class="no-print"><div class="head"><div style="display:flex;align-items:center;gap:10px"><img src="logo-header.png" alt="Key Engineering logo" style="height:38px;width:auto;flex-shrink:0"><h1>Key Engineering Chesterfield LTD — Job Manager <span style="font-size:11px;font-weight:400;opacity:.55">build 2026-09-10.6</span></h1></div><span id="counter"></span></div></header>
 <div class="wrap">
 <div class="nav no-print">
 <button class="primary" onclick="newJob()">＋ New Job</button><button onclick="home()">Jobs</button><button onclick="customersPage()">Customers</button><button onclick="engineersPage()">Engineers</button>
@@ -212,7 +212,7 @@ function selectExistingCustomer(){
  customerChanged();
 }
 function newJob(){
- hide();document.getElementById('form').classList.remove('hidden');setupLists();f_job.value=nextJob();f_date.value=new Date().toISOString().slice(0,10);
+ hide();document.getElementById('form').classList.remove('hidden');setupLists();f_job.value=nextJob();f_date.value=localDateStr();
  editingJobNo=null;document.getElementById('formHeading').textContent='New Job Order';
  ['f_order','f_customer','f_customerSelect','f_email','f_site','f_contact','e1','e2','e3','e4','f_comments','custName','custPosition'].forEach(x=>document.getElementById(x).value='');
  timeRows=[];matRows=[];addTimeRow();renderMaterials();clearSig('customerSig');clearSig('engineerSig');
@@ -237,7 +237,7 @@ function editJob(no){
  document.getElementById('f_comments').value=j.comments||'';
  document.getElementById('custName').value=j.customerName||'';
  document.getElementById('custPosition').value=j.customerPosition||'';
- timeRows=(j.time||[]).map(r=>({...r}));if(!timeRows.length)timeRows.push({date:j.date||new Date().toISOString().slice(0,10),nt:'',ot:'',dt:'',mile:'',eid:''});
+ timeRows=(j.time||[]).map(r=>({...r}));if(!timeRows.length)timeRows.push({date:j.date||localDateStr(),nt:'',ot:'',dt:'',mile:'',eid:''});
  matRows=(j.materials||[]).map(desc=>({desc}));
  renderTime();renderMaterials();
  calloutActive=!!j.callout;updateCalloutBtn();
@@ -295,7 +295,7 @@ function orderNumberChanged(){
  if(match)fillFromOriginalJobSheet(match);
 }
 function addTimeRow(d='',nt='',ot='',dt='',mile='',eid=''){
- timeRows.push({date:d||new Date().toISOString().slice(0,10),nt,ot,dt,mile,eid});renderTime()
+ timeRows.push({date:d||localDateStr(),nt,ot,dt,mile,eid});renderTime()
 }
 function renderTime(){
  let timeRowsEl=document.getElementById('timeRows');
@@ -366,7 +366,7 @@ function viewEngineerHours(name){
  hide();document.getElementById('hours').classList.remove('hidden');
  hoursEngineerFilter=name;
  let pick=document.getElementById('hoursWeekPick');
- if(!pick.value)pick.value=hoursWeekRange(new Date().toISOString().slice(0,10)).start.toISOString().slice(0,10);
+ if(!pick.value)pick.value=localDateStr(hoursWeekRange(localDateStr()).start);
  renderHoursCard();
 }
 function hoursWeekRange(anyDateStr){
@@ -379,15 +379,15 @@ function hoursWeekRange(anyDateStr){
 }
 function shiftHoursWeek(days){
  let pick=document.getElementById('hoursWeekPick');
- let cur=hoursWeekRange(pick.value||new Date().toISOString().slice(0,10)).start;
+ let cur=hoursWeekRange(pick.value||localDateStr()).start;
  cur.setDate(cur.getDate()+days);
- pick.value=cur.toISOString().slice(0,10);
+ pick.value=localDateStr(cur);
  renderHoursCard();
 }
 function renderHoursCard(){
- let pickVal=document.getElementById('hoursWeekPick').value||new Date().toISOString().slice(0,10);
+ let pickVal=document.getElementById('hoursWeekPick').value||localDateStr();
  let{start,end}=hoursWeekRange(pickVal);
- let startStr=start.toISOString().slice(0,10),endStr=end.toISOString().slice(0,10);
+ let startStr=localDateStr(start),endStr=localDateStr(end);
  currentHoursWeekStart=startStr;
  document.getElementById('hoursWeekPick').value=startStr; // snap the picker itself to the Monday of that week
  document.getElementById('hoursHeading').textContent=hoursEngineerFilter?hoursEngineerFilter+"'s Hours":'Weekly Hours';
@@ -554,6 +554,15 @@ function isStandalone(){
  return window.matchMedia&&window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone===true;
 }
 function safeName(s){return String(s||'').replace(/[\\\/:*?"<>|]/g,'-').trim()}
+function localDateStr(d){
+ // Returns YYYY-MM-DD in LOCAL time. Date.toISOString() converts to UTC first, which
+ // silently rolls back to the previous day whenever the local clock is ahead of UTC —
+ // exactly the case during British Summer Time. That was quietly corrupting week
+ // boundaries (Next/Prev week, and which job-sheet dates count as "this week").
+ d=d||new Date();
+ let y=d.getFullYear(),m=String(d.getMonth()+1).padStart(2,'0'),day=String(d.getDate()).padStart(2,'0');
+ return y+'-'+m+'-'+day;
+}
 function ukDate(iso){
  if(!iso)return '';
  let d=new Date(iso+'T00:00:00');
