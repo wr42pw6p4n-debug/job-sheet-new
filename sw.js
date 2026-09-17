@@ -1,5 +1,5 @@
-const CACHE = "rkey-job-manager-v5";
-const ASSETS = ["./", "./index.html", "./manifest.webmanifest", "./icon-192.png", "./icon-512.png", "./logo-header.png"];
+const CACHE = "rkey-job-manager-v6";
+const ASSETS = ["./", "./index.html", "./manifest.webmanifest", "./icon-192.png", "./icon-512.png", "./logo-header.png", "./watermark.png"];
 
 self.addEventListener("install", event => {
   event.waitUntil(
