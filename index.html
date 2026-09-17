@@ -73,7 +73,7 @@ loadWithFallback(['https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.mi
 </script>
 </head>
 <body>
-<header class="no-print"><div class="head"><div style="display:flex;align-items:center;gap:10px"><img src="logo-header.png" alt="Key Engineering logo" style="height:38px;width:auto;flex-shrink:0"><h1>Key Engineering Chesterfield LTD — Job Manager <span style="font-size:11px;font-weight:400;opacity:.55">build 2026-09-17.1</span></h1></div><span id="counter"></span></div></header>
+<header class="no-print"><div class="head"><div style="display:flex;align-items:center;gap:10px"><img src="logo-header.png" alt="Key Engineering logo" style="height:38px;width:auto;flex-shrink:0"><h1>Key Engineering Chesterfield LTD — Job Manager <span style="font-size:11px;font-weight:400;opacity:.55">build 2026-09-17.2</span></h1></div><span id="counter"></span></div></header>
 <div class="wrap">
 <div class="nav no-print">
 <button class="primary" onclick="newJob()">＋ New Job</button><button onclick="home()">Jobs</button><button onclick="customersPage()">Customers</button><button onclick="engineersPage()">Engineers</button>
@@ -421,10 +421,10 @@ function renderHoursCard(){
   });
  });
  let names=Object.keys(totals).sort((a,b)=>a.localeCompare(b));
- document.getElementById('hoursCardBody').innerHTML=names.length?`<table class="hourstable">
+ document.getElementById('hoursCardBody').innerHTML=names.length?`<div style="overflow-x:auto"><table class="hourstable">
   <tr><th>Engineer</th><th>N/T</th><th>O/T</th><th>D/T</th><th>Total Hrs</th><th>Call-outs</th><th>Mileage</th></tr>
   ${names.map(n=>{let t=totals[n];let tot=t.nt+t.ot+t.dt;return`<tr><td>${esc(n)}</td><td>${t.nt.toFixed(2)}</td><td>${t.ot.toFixed(2)}</td><td>${t.dt.toFixed(2)}</td><td><b>${tot.toFixed(2)}</b></td><td>${t.callouts.size||0}</td><td>${t.mile?Math.round(t.mile):0}</td></tr>`}).join('')}
- </table>`:`<p class="muted">No hours recorded for ${hoursEngineerFilter?esc(hoursEngineerFilter):'anyone'} this week.</p>`;
+ </table></div>`:`<p class="muted">No hours recorded for ${hoursEngineerFilter?esc(hoursEngineerFilter):'anyone'} this week.</p>`;
 }
 let editingEngineerIdx=null;
 function renderEngineers(){
@@ -639,9 +639,12 @@ async function downloadHoursPdf(){
  try{
   let ready=await window.pdfLibsReady;
   if(!ready||!window.html2canvas||!window.jspdf){alert('Could not load the PDF tools — check your internet connection and try again.');return}
-  let canvas=await html2canvas(card,{scale:2,useCORS:true,backgroundColor:'#ffffff'});
+  // Render at a fixed, generous width regardless of the device's actual screen size —
+  // otherwise capturing this wide table straight off a phone screen comes out cramped
+  // and gets clipped rather than properly scaled.
+  let canvas=await html2canvas(card,{scale:2,useCORS:true,backgroundColor:'#ffffff',windowWidth:900,width:900});
   let{jsPDF}=window.jspdf;
-  let pdf=new jsPDF('p','mm','a4');
+  let pdf=new jsPDF('l','mm','a4'); // landscape — a wide table fits far better than portrait
   let pageW=pdf.internal.pageSize.getWidth(),pageH=pdf.internal.pageSize.getHeight();
   let imgW=pageW,imgH=canvas.height*imgW/canvas.width;
   let img=canvas.toDataURL('image/jpeg',0.92);
