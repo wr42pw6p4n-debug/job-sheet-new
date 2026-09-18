@@ -1,4 +1,4 @@
-const CACHE = "rkey-job-manager-v6";
+const CACHE = "rkey-job-manager-v7";
 const ASSETS = ["./", "./index.html", "./manifest.webmanifest", "./icon-192.png", "./icon-512.png", "./logo-header.png", "./watermark.png"];
 
 self.addEventListener("install", event => {
@@ -37,12 +37,20 @@ self.addEventListener("fetch", event => {
     return;
   }
 
-  // Static assets (icons, manifest): cache-first is fine, they rarely change.
+  // Static assets (icons, logo, watermark): serve the cached copy immediately for
+  // speed, but always fetch a fresh copy in the background and update the cache for
+  // next time. This means swapping out an image (same filename, new content — like
+  // the watermark) shows up within one extra reload on its own, without depending on
+  // remembering to bump the cache version every single time an asset changes.
   event.respondWith(
-    caches.match(event.request).then(cached => cached || fetch(event.request).then(response => {
-      const copy = response.clone();
-      caches.open(CACHE).then(cache => cache.put(event.request, copy));
-      return response;
-    }))
+    caches.open(CACHE).then(cache =>
+      cache.match(event.request).then(cached => {
+        const fetchPromise = fetch(event.request).then(response => {
+          cache.put(event.request, response.clone());
+          return response;
+        }).catch(() => cached);
+        return cached || fetchPromise;
+      })
+    )
   );
 });
