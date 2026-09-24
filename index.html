@@ -73,7 +73,7 @@ loadWithFallback(['https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.mi
 </script>
 </head>
 <body>
-<header class="no-print"><div class="head"><div style="display:flex;align-items:center;gap:10px"><img src="logo-header.png" alt="Key Engineering logo" style="height:38px;width:auto;flex-shrink:0"><h1>Key Engineering Chesterfield LTD — Job Manager <span style="font-size:11px;font-weight:400;opacity:.55">build 2026-09-17.4</span></h1></div><span id="counter"></span></div></header>
+<header class="no-print"><div class="head"><div style="display:flex;align-items:center;gap:10px"><img src="logo-header.png" alt="Key Engineering logo" style="height:38px;width:auto;flex-shrink:0"><h1>Key Engineering Chesterfield LTD — Job Manager <span style="font-size:11px;font-weight:400;opacity:.55">build 2026-09-23.1</span></h1></div><span id="counter"></span></div></header>
 <div class="wrap">
 <div class="nav no-print">
 <button class="primary" onclick="newJob()">＋ New Job</button><button onclick="home()">Jobs</button><button onclick="customersPage()">Customers</button><button onclick="engineersPage()">Engineers</button>
@@ -149,6 +149,7 @@ loadWithFallback(['https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.mi
  <button onclick="shiftHoursWeek(-7)">◀ Prev week</button>
  <button onclick="shiftHoursWeek(7)">Next week ▶</button>
  <button class="primary" onclick="downloadHoursPdf()">⬇ Download PDF</button>
+ <button onclick="downloadWeeklyJobSheetsPdf()">📎 Merge Job Sheets This Week</button>
 </div>
 <div id="hoursPrintArea">
  <h2 id="hoursHeading">Weekly Hours</h2>
@@ -514,21 +515,11 @@ function selectCustomer(name){
  customerChanged();
 }
 let printLanding=false;
-function openJob(no){
- let j=jobs.find(x=>x.job===no);if(!j)return;hide();document.getElementById('detail').classList.remove('hidden');
+function jobSheetHtml(j){
  let total=0; (j.time||[]).forEach(r=>total+=(+r.nt||0)+(+r.ot||0)+(+r.dt||0));
  let tr=(j.time||[]).map(r=>`<tr><td>${esc(ukDate(r.date))}</td><td>${esc(r.nt||'')}</td><td>${esc(r.ot||'')}</td><td>${esc(r.dt||'')}</td><td>${((+r.nt||0)+(+r.ot||0)+(+r.dt||0)).toFixed(2)}</td><td>${esc(r.mile||'')}</td><td>${esc(r.eid||j.engineers[0]||'')}</td></tr>`).join('');
  let mats=(j.materials||[]).map(x=>`<div>${esc(x)}</div>`).join('');
- document.getElementById('detail').innerHTML=`${printLanding?'<div class="no-print" style="background:#fff8d6;border:1px solid #e5cf6b;border-radius:8px;padding:10px 12px;margin-bottom:12px;font-size:14px">Tap <strong>🖨 Print</strong> below to continue.</div>':''}<div class="actions no-print" style="margin-bottom:12px">
- <button onclick="home()">← Back</button><button class="primary" onclick="printJob('${esc(j.job)}')">🖨 Print</button>
- <button class="primary" onclick="downloadPdf('${esc(j.job)}')">⬇ Download PDF</button>
- <button onclick="shareToOneDrive('${esc(j.job)}')">📤 Save to OneDrive</button>
- <button onclick="emailJob('${esc(j.job)}')">✉ Email</button>
- <button onclick="editJob('${esc(j.job)}')">✎ Edit</button>
- <button onclick="deleteJob('${esc(j.job)}')" class="danger">Delete</button></div>
- <div class="no-print muted" id="shareHint" style="margin:-6px 0 4px 2px;font-size:12px"></div>
- <div class="no-print muted" style="margin:0 0 12px 2px;font-size:12px">Nothing happen when you tapped Print? <a href="#" onclick="event.preventDefault();openInBrowserToPrint('${esc(j.job)}')">Tap here to open in your browser and print</a>.</div>
- <div class="job-sheet">
+ return `<div class="job-sheet">
  <div class="company" style="display:flex;align-items:center;gap:12px">
  <img src="logo-header.png" alt="Key Engineering logo" style="height:52px;width:auto;flex-shrink:0">
  <div style="text-align:left"><strong>KEY ENGINEERING CHESTERFIELD LTD</strong><br>The Bungalow, Whittington Lane, Unstone, Dronfield, S18 4DQ<br>
@@ -554,6 +545,19 @@ function openJob(no){
  Name: ${esc(j.customerName||'')} &nbsp;&nbsp; Position: ${esc(j.customerPosition||'')} &nbsp;&nbsp; Date: ${esc(ukDate(j.date))}<div class="signprint">${j.customerSig?`<img src="${j.customerSig}" style="max-height:52px;max-width:260px">`:''}</div>Customer Signature / Date</div>
  <div class="footer">Job ${esc(j.job)} — Key Engineering Chesterfield LTD Job Sheet</div>
  </div>`;
+}
+function openJob(no){
+ let j=jobs.find(x=>x.job===no);if(!j)return;hide();document.getElementById('detail').classList.remove('hidden');
+ document.getElementById('detail').innerHTML=`${printLanding?'<div class="no-print" style="background:#fff8d6;border:1px solid #e5cf6b;border-radius:8px;padding:10px 12px;margin-bottom:12px;font-size:14px">Tap <strong>🖨 Print</strong> below to continue.</div>':''}<div class="actions no-print" style="margin-bottom:12px">
+ <button onclick="home()">← Back</button><button class="primary" onclick="printJob('${esc(j.job)}')">🖨 Print</button>
+ <button class="primary" onclick="downloadPdf('${esc(j.job)}')">⬇ Download PDF</button>
+ <button onclick="shareToOneDrive('${esc(j.job)}')">📤 Save to OneDrive</button>
+ <button onclick="emailJob('${esc(j.job)}')">✉ Email</button>
+ <button onclick="editJob('${esc(j.job)}')">✎ Edit</button>
+ <button onclick="deleteJob('${esc(j.job)}')" class="danger">Delete</button></div>
+ <div class="no-print muted" id="shareHint" style="margin:-6px 0 4px 2px;font-size:12px"></div>
+ <div class="no-print muted" style="margin:0 0 12px 2px;font-size:12px">Nothing happen when you tapped Print? <a href="#" onclick="event.preventDefault();openInBrowserToPrint('${esc(j.job)}')">Tap here to open in your browser and print</a>.</div>
+ ${jobSheetHtml(j)}`;
  let ws=weekStartingLabel(j);
  document.getElementById('shareHint').textContent=j.engineers.length
   ? 'Suggested OneDrive path: Job Sheets / '+j.engineers.join(' + ')+' / Week starting '+ws
@@ -659,6 +663,75 @@ async function downloadHoursPdf(){
  }catch(e){alert('Could not generate the PDF: '+e.message)}
  finally{if(btn){btn.disabled=false;btn.textContent=originalLabel}}
 }
+function jobsForEngineerWeek(engName,startStr,endStr){
+ let matched=jobs.filter(j=>(j.time||[]).some(r=>{
+  if(!r.date||r.date<startStr||r.date>endStr)return false;
+  let eng=(r.eid||'').trim()||(j.engineers&&j.engineers[0])||'Unassigned';
+  return engineerNamesMatch(eng,engName);
+ }));
+ matched.sort((a,b)=>(a.date||'').localeCompare(b.date||''));
+ return matched;
+}
+function waitForImages(container){
+ let imgs=Array.from(container.querySelectorAll('img'));
+ return Promise.all(imgs.map(img=>img.complete?Promise.resolve():new Promise(resolve=>{img.onload=resolve;img.onerror=resolve})));
+}
+async function downloadWeeklyJobSheetsPdf(){
+ if(!hoursEngineerFilter){alert('Pick an engineer from the Engineers page first.');return}
+ let btn=event&&event.target;let originalLabel=btn?btn.textContent:'';
+ if(btn){btn.disabled=true;btn.textContent='Generating…'}
+ let offscreen=null;
+ try{
+  let ready=await window.pdfLibsReady;
+  if(!ready||!window.html2canvas||!window.jspdf){alert('Could not load the PDF tools — check your internet connection and try again.');return}
+  let pickVal=document.getElementById('hoursWeekPick').value||localDateStr();
+  let{start,end}=hoursWeekRange(pickVal);
+  let startStr=localDateStr(start),endStr=localDateStr(end);
+  let matched=jobsForEngineerWeek(hoursEngineerFilter,startStr,endStr);
+  if(!matched.length){alert('No job sheets found for '+hoursEngineerFilter+' in that week.');return}
+
+  // Render each matching job sheet off-screen (reusing the exact same template the
+  // single-job PDF uses) and stitch them into one combined, multi-page PDF.
+  offscreen=document.createElement('div');
+  offscreen.style.position='fixed';offscreen.style.left='-99999px';offscreen.style.top='0';offscreen.style.width='1000px';
+  document.body.appendChild(offscreen);
+
+  let{jsPDF}=window.jspdf;
+  let pdf=new jsPDF('p','mm','a4');
+  let pageW=pdf.internal.pageSize.getWidth(),pageH=pdf.internal.pageSize.getHeight();
+
+  for(let i=0;i<matched.length;i++){
+   if(btn)btn.textContent='Generating… ('+(i+1)+'/'+matched.length+')';
+   offscreen.innerHTML=jobSheetHtml(matched[i]);
+   await waitForImages(offscreen);
+   let sheet=offscreen.querySelector('.job-sheet');
+   let canvas=await html2canvas(sheet,{scale:2,useCORS:true,backgroundColor:'#ffffff'});
+   let imgW=pageW,imgH=canvas.height*imgW/canvas.width;
+   let img=canvas.toDataURL('image/jpeg',0.92);
+   if(i>0)pdf.addPage();
+   if(imgH<=pageH){pdf.addImage(img,'JPEG',0,0,imgW,imgH)}
+   else{let scale=pageH/imgH;pdf.addImage(img,'JPEG',0,0,imgW*scale,pageH)}
+  }
+
+  let filename='Weekly Job Sheets - '+safeName(hoursEngineerFilter)+' - Week starting '+safeName(ukDate(startStr))+'.pdf';
+  let blob=pdf.output('blob');
+  let file=new File([blob],filename,{type:'application/pdf'});
+  if(navigator.canShare&&navigator.canShare({files:[file]})){
+   await navigator.share({files:[file],title:filename,text:'Job Sheets / '+hoursEngineerFilter+' / Week starting '+ukDate(startStr)+' ('+matched.length+' job'+(matched.length===1?'':'s')+')'});
+  }else{
+   let url=URL.createObjectURL(blob);
+   let a=document.createElement('a');a.href=url;a.download=filename;document.body.appendChild(a);a.click();a.remove();
+   setTimeout(()=>URL.revokeObjectURL(url),4000);
+   alert('Saved as "'+filename+'" ('+matched.length+' job sheet'+(matched.length===1?'':'s')+'). In Files, choose "Save to OneDrive" and file it under:\nJob Sheets / '+hoursEngineerFilter+' / Week starting '+ukDate(startStr));
+  }
+ }catch(e){
+  if(e&&e.name==='AbortError'){}else{alert('Could not generate the combined PDF: '+e.message)}
+ }
+ finally{
+  if(offscreen)offscreen.remove();
+  if(btn){btn.disabled=false;btn.textContent=originalLabel}
+ }
+}
 async function downloadPdf(no){
  let btn=event&&event.target;let originalLabel=btn?btn.textContent:'';
  if(btn){btn.disabled=true;btn.textContent='Generating…'}
@@ -689,16 +762,35 @@ async function shareToOneDrive(no){
  }catch(e){alert('Could not generate the PDF: '+e.message)}
  finally{if(btn){btn.disabled=false;btn.textContent=originalLabel}}
 }
-function emailJob(no){
+async function emailJob(no){
  let j=jobs.find(x=>x.job===no);if(!j)return;
- let subject=encodeURIComponent('Job Sheet '+j.job+' - '+j.customer);
- let body=encodeURIComponent('Job Sheet '+j.job+'\nCustomer: '+j.customer+'\nSite: '+j.site+'\nDate: '+ukDate(j.date)+'\n\nPlease attach the PDF generated using Download PDF.');
- let mailtoUrl='mailto:'+(j.email||'')+'?subject='+subject+'&body='+body;
- // location.href can silently no-op inside a home-screen PWA's webview; clicking a real
- // anchor element is the more reliable way to hand the mailto: link off to the Mail app.
- let a=document.createElement('a');a.href=mailtoUrl;a.style.display='none';
- document.body.appendChild(a);a.click();
- setTimeout(()=>a.remove(),1000);
+ let btn=event&&event.target;let originalLabel=btn?btn.textContent:'';
+ if(btn){btn.disabled=true;btn.textContent='Preparing…'}
+ try{
+  let result=await generatePdfBlob(no);
+  let subject='Job Sheet '+j.job+' - '+j.customer;
+  let bodyText='Job Sheet '+j.job+'\nCustomer: '+j.customer+'\nSite: '+j.site+'\nDate: '+ukDate(j.date);
+  if(result){
+   let file=new File([result.blob],result.filename,{type:'application/pdf'});
+   if(navigator.canShare&&navigator.canShare({files:[file]})){
+    // Routes through the share sheet so the PDF actually attaches — a mailto: link
+    // can only pre-fill text, it can never attach a file.
+    await navigator.share({files:[file],title:subject,text:bodyText});
+    return;
+   }
+  }
+  // Fallback: no file-sharing support, or the PDF failed to generate — open a plain
+  // email with no attachment rather than leaving the person with nothing at all.
+  let fallbackBody=bodyText+(result?'\n\nPlease attach the PDF generated using Download PDF.':'');
+  let mailtoUrl='mailto:'+(j.email||'')+'?subject='+encodeURIComponent(subject)+'&body='+encodeURIComponent(fallbackBody);
+  let a=document.createElement('a');a.href=mailtoUrl;a.style.display='none';
+  document.body.appendChild(a);a.click();
+  setTimeout(()=>a.remove(),1000);
+ }catch(e){
+  if(e&&e.name==='AbortError')return; // user cancelled the share sheet — not an error
+  alert('Could not prepare the email: '+e.message);
+ }
+ finally{if(btn){btn.disabled=false;btn.textContent=originalLabel}}
 }
 // ---- Automatic mileage calculation (optional) ----
 // Works out the round-trip driving distance from the office to the job site and fills
