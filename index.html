@@ -73,7 +73,7 @@ loadWithFallback(['https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.mi
 </script>
 </head>
 <body>
-<header class="no-print"><div class="head"><div style="display:flex;align-items:center;gap:10px"><img src="logo-header.png" alt="Key Engineering logo" style="height:38px;width:auto;flex-shrink:0"><h1>Key Engineering Chesterfield LTD — Job Manager <span style="font-size:11px;font-weight:400;opacity:.55">build 2026-09-23.1</span></h1></div><span id="counter"></span></div></header>
+<header class="no-print"><div class="head"><div style="display:flex;align-items:center;gap:10px"><img src="logo-header.png" alt="Key Engineering logo" style="height:38px;width:auto;flex-shrink:0"><h1>Key Engineering Chesterfield LTD — Job Manager <span style="font-size:11px;font-weight:400;opacity:.55">build 2026-09-25.1</span></h1></div><span id="counter"></span></div></header>
 <div class="wrap">
 <div class="nav no-print">
 <button class="primary" onclick="newJob()">＋ New Job</button><button onclick="home()">Jobs</button><button onclick="customersPage()">Customers</button><button onclick="engineersPage()">Engineers</button>
@@ -82,7 +82,7 @@ loadWithFallback(['https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.mi
 <section id="home" class="card no-print">
 <h2>Job Orders</h2>
 <div id="stats"></div>
-<input id="search" placeholder="Search job number, customer, site or engineer…" oninput="renderJobs()">
+<input id="search" placeholder="Search job number, customer, site, date or notes…" oninput="renderJobs()">
 <div id="jobList"></div>
 </section>
 
@@ -359,7 +359,8 @@ function saveJob(){
  openJob(j.job);
 }
 function renderJobs(){
- let q=(search.value||'').toLowerCase(),a=jobs.filter(j=>JSON.stringify(j).toLowerCase().includes(q)).sort((a,b)=>b.created.localeCompare(a.created));
+ let q=(search.value||'').toLowerCase();
+ let a=jobs.filter(j=>(JSON.stringify(j).toLowerCase()+' '+ukDate(j.date).toLowerCase()).includes(q)).sort((a,b)=>b.created.localeCompare(a.created));
  document.getElementById('stats').innerHTML=`<span class="stat">Total: ${jobs.length}</span><span class="stat">Open: ${jobs.filter(x=>x.status==='Open').length}</span><span class="stat">Complete: ${jobs.filter(x=>x.status==='Complete').length}</span>`;
  document.getElementById('jobList').innerHTML=a.length?a.map(j=>`<div class="jobrow"><div><b>Job ${esc(j.job)}</b> — ${esc(j.customer)}${j.callout?'<span class="callout-badge">CALL-OUT</span>':''}<div class="muted">${esc(j.site)} · ${esc(ukDate(j.date))} · ${esc(j.type)}</div></div><div class="actions"><span class="pill">${esc(j.status)}</span><button onclick="openJob('${esc(j.job)}')">Open</button></div></div>`).join(''):'<p class="muted">No jobs yet. Tap New Job.</p>';
  document.getElementById('counter').textContent=jobs.length+' jobs'
