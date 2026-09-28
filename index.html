@@ -20,7 +20,7 @@ label{font-size:12px;font-weight:700;display:block;margin-bottom:4px}input,selec
 .jobrow{display:flex;justify-content:space-between;align-items:center;gap:10px;border:1px solid #d5dce1;border-radius:8px;padding:12px;margin:7px 0}.pill{font-size:11px;border-radius:20px;padding:5px 8px;background:#e7f1fb;color:#145c8d;font-weight:700}
 hr{border:0;border-top:1px solid #d2d8dd;margin:18px 0}
 .sigcanvas{border:1px solid #222;border-radius:5px;background:#fff;width:100%;height:130px;touch-action:none}.sig-actions{margin-top:5px}
-.actions{display:flex;gap:7px;flex-wrap:wrap}.stat{display:inline-block;background:#f5f7f8;border:1px solid #d7dde1;border-radius:7px;padding:8px 10px;margin:3px;font-size:12px}
+.actions{display:flex;gap:7px;flex-wrap:wrap}.dashgrid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin:10px 0}.dashcard{border:1px solid #d5dce1;border-radius:9px;padding:12px;background:#fff;cursor:pointer}.dashcard strong{display:block;font-size:24px;margin-top:3px}.dashcard small{color:#68747d}.attention{border-left:4px solid #c0392b}.backupbar{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}.stat{display:inline-block;background:#f5f7f8;border:1px solid #d7dde1;border-radius:7px;padding:8px 10px;margin:3px;font-size:12px}
 .job-sheet{max-width:1000px;margin:auto;background-color:#fff;background-image:url('watermark.png');background-repeat:no-repeat;background-position:center;background-size:auto 92%;-webkit-print-color-adjust:exact;print-color-adjust:exact;color:#000;padding:22px}
 .company{text-align:center;border:1px solid #111;padding:7px;font-size:10px;line-height:1.35}.company strong{font-size:14px}
 .title{border:2px solid #111;border-top:0;text-align:center;font-weight:bold;font-size:22px;padding:9px}
@@ -38,7 +38,7 @@ hr{border:0;border-top:1px solid #d2d8dd;margin:18px 0}
 .custrow:hover{background:#f5f8fb}
 .custedit{border:1px solid #d5dce1;border-radius:8px;padding:12px;margin:7px 0;background:#f9fbfc}
 button[disabled]{opacity:.55;cursor:wait}
-@media(max-width:700px){.grid,.grid4{grid-template-columns:1fr}.jobrow,.custrow{flex-direction:column;align-items:flex-start}.job-sheet{padding:10px}}
+@media(max-width:700px){.grid,.grid4{grid-template-columns:1fr}.dashgrid{grid-template-columns:repeat(2,1fr)}.dashcard{padding:9px 11px}.dashcard strong{font-size:20px}.jobrow,.custrow{flex-direction:column;align-items:flex-start}.job-sheet{padding:10px}}
 @media print{body{background:#fff}.no-print,header{display:none!important}.wrap{padding:0;max-width:none}.card{box-shadow:none;padding:0;margin:0}.job-sheet{max-width:none;padding:6mm;transform-origin:top left}@page{size:A4;margin:7mm}
 .company{padding:4px;font-size:9px}.company strong{font-size:13px}.company img{height:34px!important}
 .title{font-size:17px;padding:5px}
@@ -46,6 +46,18 @@ button[disabled]{opacity:.55;cursor:wait}
 .box{min-height:60px;padding:5px}
 .cert{min-height:55px;padding:5px}.signprint{height:36px}
 .footer{margin-top:4px}}
+.filterchip{display:inline-flex;align-items:center;gap:8px;background:#e7f1fb;border:1px solid #b9d3ee;color:#0f4c81;border-radius:20px;padding:5px 6px 5px 12px;font-size:13px;font-weight:700;margin:6px 0}
+.filterchip button{padding:2px 9px;border-radius:14px;font-size:13px}
+.notice{border-radius:8px;padding:10px 12px;margin:8px 0;font-size:13px}.notice.warn{background:#fff4d6;border:1px solid #e5cf6b}.notice.ok{background:#e6f4ea;border:1px solid #a8d5b5}
+.notice button{padding:4px 10px;font-size:12px;margin-left:8px}
+.modalback{position:fixed;inset:0;background:#0007;z-index:50;display:flex;align-items:center;justify-content:center;padding:16px}
+.modalbox{background:#fff;border-radius:12px;max-width:460px;width:100%;padding:18px;box-shadow:0 8px 30px #0005}.modalbox h3{margin:0 0 8px}.modalbox p{margin:6px 0;font-size:14px}
+.repgroup{border:1px solid #d5dce1;border-radius:10px;margin:10px 0;overflow:hidden;background:#fff}
+.repgroup>h4{margin:0;padding:9px 12px;background:#f2f5f7;font-size:15px}
+.repitem{padding:10px 12px;border-top:1px solid #e3e8ec}.repitem .meta{font-size:12px;color:#55616a;margin-bottom:4px}.repitem .txt{white-space:pre-wrap;font-size:14px}
+.repstatus{display:inline-flex;gap:4px;margin-top:8px;flex-wrap:wrap}.repstatus button{padding:6px 10px;font-size:12px}
+.repstatus button.on{background:#1769aa;color:#fff;border-color:#1769aa}.repstatus button.on.booked{background:#e08a00;border-color:#e08a00}.repstatus button.on.done{background:#2e7d32;border-color:#2e7d32}
+.repbadge{display:inline-block;font-size:11px;font-weight:700;border-radius:6px;padding:2px 7px;background:#e08a00;color:#fff;margin-left:8px;vertical-align:middle}
 </style>
 <script>
 // Loads a lib from a primary CDN, falling back to a mirror if the first is blocked/unreachable.
@@ -73,16 +85,27 @@ loadWithFallback(['https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.mi
 </script>
 </head>
 <body>
-<header class="no-print"><div class="head"><div style="display:flex;align-items:center;gap:10px"><img src="logo-header.png" alt="Key Engineering logo" style="height:38px;width:auto;flex-shrink:0"><h1>Key Engineering Chesterfield LTD — Job Manager <span style="font-size:11px;font-weight:400;opacity:.55">build 2026-09-27.1</span></h1></div><span id="counter"></span></div></header>
+<header class="no-print"><div class="head"><div style="display:flex;align-items:center;gap:10px"><img src="logo-header.png" alt="Key Engineering logo" style="height:38px;width:auto;flex-shrink:0"><h1>Key Engineering Chesterfield LTD — Job Manager <span style="font-size:11px;font-weight:400;opacity:.55">build 2026-09-28.1</span></h1></div><span id="counter"></span></div></header>
 <div class="wrap">
 <div class="nav no-print">
-<button class="primary" onclick="newJob()">＋ New Job</button><button onclick="home()">Jobs</button><button onclick="customersPage()">Customers</button><button onclick="engineersPage()">Engineers</button>
+<button class="primary" onclick="newJob()">＋ New Job</button><button onclick="home()">Jobs</button><button onclick="customersPage()">Customers</button><button onclick="engineersPage()">Engineers</button><button onclick="repairsPage()">🔧 Repairs</button>
 </div>
 
 <section id="home" class="card no-print">
-<h2>Job Orders</h2>
+<h2>Job Dashboard</h2>
+<div id="backupNotice"></div>
+<div id="dashboardCards" class="dashgrid"></div>
 <div id="stats"></div>
-<input id="search" placeholder="Search job number, customer, site, date or notes…" oninput="renderJobs()">
+<div class="backupbar">
+ <button onclick="exportBackup()">⬇ Backup Data</button>
+ <button onclick="importBackup()">⬆ Restore / Merge Backup</button>
+ <button id="undoImportBtn" class="hidden" onclick="undoImport()">↩ Undo last import</button>
+ <button onclick="showTodayJobs()">📅 Today</button>
+</div>
+<div id="lastBackupInfo" class="muted" style="margin-top:6px"></div>
+<hr>
+<input id="search" placeholder="Search job number, customer, site, engineer, crane no. or notes…" oninput="renderJobs()">
+<div id="filterChip"></div>
 <div id="jobList"></div>
 </section>
 
@@ -97,6 +120,9 @@ loadWithFallback(['https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.mi
 <div><label>Type of Work</label><select id="f_type"></select></div>
 <div><label>Location / Site</label><input id="f_site" onchange="autoFillMileage()"></div>
 <div><label>Site Contact(s)</label><input id="f_contact"></div>
+<div><label>Equipment / Crane No.</label><input id="f_equipment" placeholder="Asset, crane or equipment number"></div>
+<div><label>Manufacturer / Model</label><input id="f_model" placeholder="e.g. Demag / Konecranes / SWF"></div>
+<div><label>Serial No. / SWL</label><input id="f_serial" placeholder="Serial number / SWL"></div>
 <div><label>Date</label><input id="f_date" type="date"></div>
 <div><label>Status</label><select id="f_status"><option>Open</option><option>In Progress</option><option>Complete</option></select></div>
 </div>
@@ -107,7 +133,9 @@ loadWithFallback(['https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.mi
 </div>
 <datalist id="engineerOptions"></datalist>
 <hr>
-<label>Report of Work Carried Out / Comments</label><textarea id="f_comments"></textarea>
+<label>Report of Work Carried Out / Comments</label><textarea id="f_comments" placeholder="Describe work carried out, tests completed and condition of equipment…"></textarea>
+<div style="margin-top:10px"><label>Repairs Required / Defects / Recommendations</label><textarea id="f_defects" placeholder="Record outstanding repairs, defects or recommendations. Leave blank if none."></textarea>
+<div style="margin-top:8px;max-width:260px"><label>Repair status</label><select id="f_repairStatus"><option value="">Outstanding</option><option value="Booked">Booked in</option><option value="Done">Done</option></select></div></div>
 <hr>
 <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:14px"><h3 style="margin:0">Time, Expenses & Mileage</h3><button type="button" id="calloutBtn" class="calloutbtn no-print" onclick="toggleCallout()">⚡ Call-out</button></div>
 <div id="timeRows"></div>
@@ -158,6 +186,28 @@ loadWithFallback(['https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.mi
  <div id="hoursCardBody"></div>
 </div>
 </section>
+<section id="repairs" class="card hidden">
+<button class="no-print" onclick="home()" style="margin-bottom:10px">← Back to Jobs</button>
+<h2>Repairs Required</h2>
+<div class="muted" style="margin-bottom:10px">Everything recorded under "Repairs Required / Defects / Recommendations" on job sheets, grouped by customer so repairs can be booked in. Set each one to <b>Booked in</b> or <b>Done</b> as you go.</div>
+<div class="no-print" style="margin-bottom:10px;display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+ <label style="margin:0 4px 0 0">Show</label>
+ <select id="repairsScope" onchange="renderRepairs()" style="width:auto"><option value="week">This week's reports</option><option value="all">All outstanding repairs</option></select>
+ <span id="repairsWeekCtl" style="display:inline-flex;gap:8px;align-items:center;flex-wrap:wrap">
+  <label style="margin:0 0 0 6px">Week starting</label>
+  <input type="date" id="repairsWeekPick" onchange="renderRepairs()" style="width:auto">
+  <button onclick="shiftRepairsWeek(-7)">◀ Prev week</button>
+  <button onclick="shiftRepairsWeek(7)">Next week ▶</button>
+ </span>
+</div>
+<div class="actions no-print" style="margin-bottom:10px">
+ <button class="primary" onclick="exportRepairsPdf('download')">⬇ Download PDF</button>
+ <button onclick="exportRepairsPdf('share')">📤 Share / Email PDF</button>
+</div>
+<div id="repairsUndo"></div>
+<div id="repairsSummary" style="font-weight:700;margin:6px 0"></div>
+<div id="repairsBody"></div>
+</section>
 <section id="detail" class="card hidden"></section>
 </div>
 
@@ -172,6 +222,25 @@ if(!Array.isArray(jobs)){
  seededFromHistory=true;
  try{localStorage.setItem('rkey_jobs',JSON.stringify(jobs))}catch(e){}
 }
+function normalizeJob(j){
+ // Fills any missing fields so one odd record (older app version, hand-edited or damaged backup)
+ // can never break the Jobs list or a job sheet. Also refuses anything but a real image as a signature.
+ const s=v=>typeof v==='string'?v:(v==null?'':String(v));
+ const img=v=>(typeof v==='string'&&/^data:image\/(png|jpeg|webp);base64,[A-Za-z0-9+\/=]+$/.test(v))?v:'';
+ const time=Array.isArray(j.time)?j.time.filter(r=>r&&typeof r==='object').map(r=>({date:s(r.date),nt:s(r.nt),ot:s(r.ot),dt:s(r.dt),mile:s(r.mile),eid:s(r.eid)})):[];
+ return Object.assign({},j,{
+  job:s(j.job),order:s(j.order),customer:s(j.customer),site:s(j.site),contact:s(j.contact),email:s(j.email),
+  equipment:s(j.equipment),model:s(j.model),serial:s(j.serial),date:s(j.date),
+  status:['Open','In Progress','Complete'].includes(j.status)?j.status:'Open',type:s(j.type),
+  engineers:Array.isArray(j.engineers)?j.engineers.map(s).filter(Boolean):[],
+  comments:s(j.comments),defects:s(j.defects),repairStatus:['Booked','Done'].includes(j.repairStatus)?j.repairStatus:'',
+  time,materials:Array.isArray(j.materials)?j.materials.map(s):[],
+  customerName:s(j.customerName),customerPosition:s(j.customerPosition),
+  customerSig:img(j.customerSig),engineerSig:img(j.engineerSig),callout:!!j.callout,
+  created:s(j.created)||((s(j.date)||'1970-01-01')+'T00:00:00.000Z')
+ });
+}
+jobs=jobs.filter(j=>j&&typeof j==='object').map(normalizeJob);
 let savedCustomers=[];
 try{savedCustomers=JSON.parse(localStorage.getItem('rkey_customers')||'[]');if(!Array.isArray(savedCustomers))savedCustomers=[]}catch(e){savedCustomers=[]}
 let deletedCustomers=[];
@@ -196,8 +265,8 @@ function updateCalloutBtn(){
  btn.textContent=calloutActive?'⚡ Call-out ✓':'⚡ Call-out';
 }
 function esc(v){return String(v??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]))}
-function hide(){['home','form','customers','engineers','hours','detail'].forEach(x=>document.getElementById(x).classList.add('hidden'))}
-function home(){hide();document.getElementById('home').classList.remove('hidden');renderJobs()}
+function hide(){['home','form','customers','engineers','hours','repairs','detail'].forEach(x=>document.getElementById(x).classList.add('hidden'))}
+function home(){window._jobFilterStatus=null;window._jobFilterDefects=false;window._jobFilterToday=false;window._showAllJobs=false;hide();document.getElementById('home').classList.remove('hidden');renderJobs()}
 function nextJob(){let n=jobs.map(j=>parseInt(j.job,10)).filter(Number.isFinite);return String((n.length?Math.max(...n):0)+1)}
 function setupLists(){customerOptions.innerHTML=customers.map(x=>`<option value="${esc(x)}"></option>`).join('');document.getElementById('engineerOptions').innerHTML=engineers.map(x=>`<option value="${esc(x)}"></option>`).join('');document.getElementById('f_type').innerHTML=types.map(x=>`<option>${esc(x)}</option>`).join('');
  let sel=document.getElementById('f_customerSelect');
@@ -221,7 +290,7 @@ function selectExistingCustomer(){
 function newJob(){
  hide();document.getElementById('form').classList.remove('hidden');setupLists();f_job.value=nextJob();f_date.value=localDateStr();
  editingJobNo=null;document.getElementById('formHeading').textContent='New Job Order';
- ['f_order','f_customer','f_customerSelect','f_email','f_site','f_contact','e1','e2','e3','e4','f_comments','custName','custPosition'].forEach(x=>document.getElementById(x).value='');
+ ['f_order','f_customer','f_customerSelect','f_email','f_site','f_contact','f_equipment','f_model','f_serial','f_defects','f_repairStatus','e1','e2','e3','e4','f_comments','custName','custPosition'].forEach(x=>document.getElementById(x).value='');
  timeRows=[];matRows=[];addTimeRow();renderMaterials();clearSig('customerSig');clearSig('engineerSig');
  calloutActive=false;updateCalloutBtn();
 }
@@ -237,11 +306,16 @@ function editJob(no){
  document.getElementById('f_email').value=j.email||'';
  document.getElementById('f_site').value=j.site||'';
  document.getElementById('f_contact').value=j.contact||'';
+ document.getElementById('f_equipment').value=j.equipment||'';
+ document.getElementById('f_model').value=j.model||'';
+ document.getElementById('f_serial').value=j.serial||'';
  document.getElementById('f_date').value=j.date||'';
  document.getElementById('f_status').value=j.status||'Open';
  document.getElementById('f_type').value=j.type||'';
  ['e1','e2','e3','e4'].forEach((id,i)=>document.getElementById(id).value=(j.engineers||[])[i]||'');
  document.getElementById('f_comments').value=j.comments||'';
+ document.getElementById('f_defects').value=j.defects||'';
+ document.getElementById('f_repairStatus').value=j.repairStatus||'';
  document.getElementById('custName').value=j.customerName||'';
  document.getElementById('custPosition').value=j.customerPosition||'';
  timeRows=(j.time||[]).map(r=>({...r}));if(!timeRows.length)timeRows.push({date:j.date||localDateStr(),nt:'',ot:'',dt:'',mile:'',eid:''});
@@ -325,9 +399,9 @@ function saveJob(){
  const v=id=>document.getElementById(id).value;
  let j={
   job:v('f_job'),order:v('f_order'),customer:v('f_customer'),site:v('f_site'),
-  contact:v('f_contact'),email:v('f_email').trim(),date:v('f_date'),status:v('f_status'),type:v('f_type'),
+  contact:v('f_contact'),equipment:v('f_equipment'),model:v('f_model'),serial:v('f_serial'),email:v('f_email').trim(),date:v('f_date'),status:v('f_status'),type:v('f_type'),
   engineers:['e1','e2','e3','e4'].map(v).filter(Boolean),
-  comments:v('f_comments'),time:timeRows,materials:matRows.map(x=>x.desc).filter(Boolean),
+  comments:v('f_comments'),defects:v('f_defects'),repairStatus:v('f_defects').trim()?v('f_repairStatus'):'',updatedAt:new Date().toISOString(),time:timeRows,materials:matRows.map(x=>x.desc).filter(Boolean),
   customerName:v('custName'),customerPosition:v('custPosition'),callout:calloutActive,
   customerSig:document.getElementById('customerSig').toDataURL(),
   engineerSig:document.getElementById('engineerSig').toDataURL(),
@@ -339,6 +413,7 @@ function saveJob(){
   let idx=jobs.findIndex(x=>x.job===editingJobNo);
   if(idx===-1){alert('Could not find the original job to update — it may have been deleted.');return}
   j.created=jobs[idx].created||j.created;
+  if(j.email===jobs[idx].email)j.completionEmailSentAt=jobs[idx].completionEmailSentAt||'';
   jobs[idx]=j;
  }else{
   if(jobs.some(x=>x.job===j.job)){if(!confirm('Job '+j.job+' already exists. Save anyway as a duplicate?'))return}
@@ -354,16 +429,45 @@ function saveJob(){
   customerRecords[key]={name:j.customer,site:j.site,contact:j.contact,email:j.email};
   saveCustomerRecords();
  }
- if(j.status==='Complete'&&j.email)sendCompletionEmail(j);
+ if(j.status==='Complete'&&j.email&&!j.completionEmailSentAt)sendCompletionEmail(j);
  editingJobNo=null;
  openJob(j.job);
 }
+const _searchCache=new WeakMap();
+function dateForms(iso){
+ // every way someone might type a date into the search box: 22 Sept 2026, 22 Sep 2026, 22/09/2026, 2026-09-22
+ if(!iso)return '';
+ const u=ukDate(iso),m=/^(\d{4})-(\d{2})-(\d{2})$/.exec(iso);
+ return u+' '+u.replace(/\bSept\b/,'Sep')+' '+iso+(m?' '+m[3]+'/'+m[2]+'/'+m[1]:'');
+}
+function searchText(j){
+ // Searchable text for one job (values only, and never the signature images — the old
+ // version searched the whole JSON, signatures included, on every keystroke).
+ let t=_searchCache.get(j);
+ if(t===undefined){
+  t=[j.job,j.order,j.customer,j.site,j.contact,j.email,j.equipment,j.model,j.serial,j.type,j.status,j.engineers.join(' '),j.comments,j.defects,j.materials.join(' '),j.customerName,j.customerPosition,dateForms(j.date),(j.time||[]).map(r=>dateForms(r.date)+' '+r.eid).join(' '),j.callout?'call-out callout':''].join(' ').toLowerCase();
+  _searchCache.set(j,t);
+ }
+ return t;
+}
+function jobIsToday(j,today){return j.date===today||(j.time||[]).some(r=>r.date===today)}
+function hasOpenRepair(j){return !!(j.defects&&j.defects.trim())&&j.repairStatus!=='Done'}
 function renderJobs(){
- let q=(search.value||'').toLowerCase();
- let a=jobs.filter(j=>(JSON.stringify(j).toLowerCase()+' '+ukDate(j.date).toLowerCase()).includes(q)).sort((a,b)=>b.created.localeCompare(a.created));
- document.getElementById('stats').innerHTML=`<span class="stat">Total: ${jobs.length}</span><span class="stat">Open: ${jobs.filter(x=>x.status==='Open').length}</span><span class="stat">Complete: ${jobs.filter(x=>x.status==='Complete').length}</span>`;
- document.getElementById('jobList').innerHTML=a.length?a.map(j=>`<div class="jobrow"><div><b>Job ${esc(j.job)}</b> — ${esc(j.customer)}${j.callout?'<span class="callout-badge">CALL-OUT</span>':''}<div class="muted">${esc(j.site)} · ${esc(ukDate(j.date))} · ${esc(j.type)}</div></div><div class="actions"><span class="pill">${esc(j.status)}</span><button onclick="openJob('${esc(j.job)}')">Open</button></div></div>`).join(''):'<p class="muted">No jobs yet. Tap New Job.</p>';
- document.getElementById('counter').textContent=jobs.length+' jobs'
+ const q=(search.value||'').toLowerCase().trim(),today=localDateStr();
+ const st=window._jobFilterStatus,dfx=window._jobFilterDefects,td=window._jobFilterToday;
+ const a=jobs.filter(j=>(!st||j.status===st)&&(!dfx||(j.defects&&j.defects.trim()))&&(!td||jobIsToday(j,today))&&(!q||searchText(j).includes(q))).sort((x,y)=>(y.created||'').localeCompare(x.created||''));
+ const open=jobs.filter(x=>x.status==='Open').length,progress=jobs.filter(x=>x.status==='In Progress').length,complete=jobs.filter(x=>x.status==='Complete').length;
+ const todayJobs=jobs.filter(x=>jobIsToday(x,today)).length,repairs=jobs.filter(hasOpenRepair).length;
+ document.getElementById('dashboardCards').innerHTML=`<div class="dashcard" onclick="filterJobsByStatus('Open')"><small>Open</small><strong>${open}</strong></div><div class="dashcard" onclick="filterJobsByStatus('In Progress')"><small>In Progress</small><strong>${progress}</strong></div><div class="dashcard" onclick="filterJobsByStatus('Complete')"><small>Complete</small><strong>${complete}</strong></div><div class="dashcard attention" onclick="repairsPage('all')"><small>Repairs outstanding</small><strong>${repairs}</strong></div>`;
+ document.getElementById('stats').innerHTML=`<span class="stat">Total: ${jobs.length}</span><span class="stat">Today: ${todayJobs}</span><span class="stat">Customers: ${customers.length}</span>`;
+ const labels=[];if(st)labels.push('Status: '+st);if(td)labels.push('Today');if(dfx)labels.push('With defects');
+ document.getElementById('filterChip').innerHTML=labels.length?`<span class="filterchip">Showing: ${esc(labels.join(' + '))} · ${a.length} job${a.length===1?'':'s'}<button onclick="clearJobFilters()">✕ Clear</button></span>`:'';
+ const LIMIT=150,shown=window._showAllJobs?a:a.slice(0,LIMIT);
+ document.getElementById('jobList').innerHTML=(a.length?shown.map(j=>`<div class="jobrow"><div><b>Job ${esc(j.job)}</b> — ${esc(j.customer)}${j.callout?'<span class="callout-badge">CALL-OUT</span>':''}${hasOpenRepair(j)?'<span class="repbadge">REPAIRS</span>':''}<div class="muted">${esc(j.site)} · ${esc(ukDate(j.date))} · ${esc(j.type)}</div></div><div class="actions"><span class="pill">${esc(j.status)}</span><button onclick="openJob('${esc(j.job)}')">Open</button></div></div>`).join('')
+  :`<p class="muted">${(q||labels.length)?'No jobs match that search.':'No jobs yet. Tap New Job.'}</p>`)
+  +(a.length>shown.length?`<div class="muted" style="text-align:center;margin:12px">Showing the newest ${shown.length} of ${a.length} jobs — search to narrow down, or <a href="#" onclick="event.preventDefault();window._showAllJobs=true;renderJobs()">show all ${a.length}</a>.</div>`:'');
+ document.getElementById('counter').textContent=jobs.length+' jobs';
+ renderBackupInfo();
 }
 let editingCustomer=null;
 function customersPage(){hide();document.getElementById('customers').classList.remove('hidden');renderCustomers()}
@@ -535,8 +639,11 @@ function jobSheetHtml(j){
  <tr><th>Customer/Company</th><td>${esc(j.customer)}${j.email?'<br><span style="font-weight:400;font-size:9px">'+esc(j.email)+'</span>':''}</td><th>Engineer(s) in Attendance</th><td>${esc(j.engineers.join(', '))}</td></tr>
  <tr><th>Location/Site</th><td>${esc(j.site)}</td><th>Date</th><td>${esc(ukDate(j.date))}</td></tr>
  <tr><th>Site Contact(s)</th><td>${esc(j.contact)}</td><th>Type of Work</th><td>${esc(j.type)}</td></tr>
+ <tr><th>Equipment / Crane No.</th><td>${esc(j.equipment||'')}</td><th>Manufacturer / Model</th><td>${esc(j.model||'')}</td></tr>
+ <tr><th>Serial No. / SWL</th><td colspan="3">${esc(j.serial||'')}</td></tr>
  </table>
  <div class="section">REPORT OF WORK CARRIED OUT:</div><div class="box">${esc(j.comments||'')}</div>
+ <div class="section">REPAIRS REQUIRED / DEFECTS / RECOMMENDATIONS</div><div class="box" style="min-height:55px">${esc(j.defects||'None recorded')}</div>
  <div class="section">TRAVELLING TIME, EXPENSES & MILEAGE WILL BE CHARGED EXTRA — MATERIALS</div>
  <table class="info time"><tr><th>DATE</th><th>N/T</th><th>O/T</th><th>D/T</th><th>TOTAL</th><th>MILEAGE</th><th>Engineer ID No.</th></tr>
  ${tr||'<tr><td colspan="7">&nbsp;</td></tr>'}<tr><th>TOTAL</th><th colspan="3"></th><th>${total.toFixed(2)}</th><th></th><th></th></tr></table>
@@ -891,11 +998,144 @@ function sendCompletionEmail(j){
   return;
  }
  emailjs.send(EMAILJS_SERVICE_ID,EMAILJS_TEMPLATE_ID,{
-  to_email:j.email,customer:j.customer,job:j.job,site:j.site,date:j.date,engineers:j.engineers.join(', ')
- }).then(()=>console.log('Completion email sent to',j.email))
+  to_email:j.email,customer:j.customer,job:j.job,site:j.site,date:j.date,engineers:j.engineers.join(', '),defects:j.defects||'',equipment:j.equipment||''
+ }).then(()=>{
+  j.completionEmailSentAt=new Date().toISOString();
+  let i=jobs.findIndex(x=>x.job===j.job); if(i>=0){jobs[i]=j;localStorage.setItem('rkey_jobs',JSON.stringify(jobs))}
+  console.log('Completion email sent to',j.email)
+ })
    .catch(err=>{console.error('Auto-email failed:',err);alert('Job saved, but the automatic email to the customer failed to send.')});
 }
-function deleteJob(no){if(confirm('Delete this job?')){jobs=jobs.filter(x=>x.job!==no);localStorage.setItem('rkey_jobs',JSON.stringify(jobs));home()}}
+function resetJobFilters(){window._jobFilterStatus=null;window._jobFilterDefects=false;window._jobFilterToday=false;window._showAllJobs=false;document.getElementById('search').value=''}
+function clearJobFilters(){resetJobFilters();renderJobs()}
+function filterJobsByStatus(status){resetJobFilters();window._jobFilterStatus=status;renderJobs()}
+function filterJobsWithDefects(){resetJobFilters();window._jobFilterDefects=true;renderJobs()}
+function showTodayJobs(){resetJobFilters();window._jobFilterToday=true;renderJobs()}
+
+/* ---------------- backup / restore / merge ---------------- */
+const BACKUP_KEY='rkey_last_backup',PRE_IMPORT_KEY='rkey_pre_import';
+function backupPayload(){return{version:3,exportedAt:new Date().toISOString(),jobs,customers,engineers,customerRecords,deletedCustomers}}
+function persistAll(){
+ localStorage.setItem('rkey_jobs',JSON.stringify(jobs));
+ localStorage.setItem('rkey_customers',JSON.stringify(customers));
+ localStorage.setItem('rkey_engineers',JSON.stringify(engineers));
+ localStorage.setItem('rkey_customer_records',JSON.stringify(customerRecords));
+ localStorage.setItem('rkey_deleted_customers',JSON.stringify(deletedCustomers));
+}
+function cleanCustomerRecords(o){
+ const out={};if(!o||typeof o!=='object')return out;
+ Object.keys(o).forEach(k=>{const r=o[k];if(r&&typeof r==='object')out[k]={name:String(r.name||''),site:String(r.site||''),contact:String(r.contact||''),email:String(r.email||'')}});
+ return out;
+}
+function markBackedUp(){try{localStorage.setItem(BACKUP_KEY,new Date().toISOString())}catch(e){}renderBackupInfo()}
+function renderBackupInfo(){
+ const info=document.getElementById('lastBackupInfo'),notice=document.getElementById('backupNotice');if(!info)return;
+ let last=null,hasUndo=false;try{last=localStorage.getItem(BACKUP_KEY);hasUndo=!!localStorage.getItem(PRE_IMPORT_KEY)}catch(e){}
+ const days=last?Math.floor((Date.now()-new Date(last).getTime())/86400000):null;
+ info.textContent=last?'Last backup: '+ukDate(localDateStr(new Date(last)))+(days>0?' ('+days+' day'+(days===1?'':'s')+' ago)':' (today)'):'No backup made on this device yet.';
+ notice.innerHTML=(last===null||days>=7)?'<div class="notice warn">⚠ '+(last===null?'This device has never been backed up.':'It has been '+days+' days since the last backup.')+' Jobs are stored on this device only.<button class="primary" onclick="exportBackup()">Back up now</button></div>':'';
+ const u=document.getElementById('undoImportBtn');if(u)u.classList.toggle('hidden',!hasUndo);
+}
+async function exportBackup(){
+ const name='Key-Engineering-Job-Manager-Backup-'+localDateStr()+'.json';
+ const blob=new Blob([JSON.stringify(backupPayload())],{type:'application/json'});
+ const file=new File([blob],name,{type:'application/json'});
+ try{
+  if(navigator.canShare&&navigator.canShare({files:[file]})){await navigator.share({files:[file],title:name,text:'Key Engineering Job Manager backup'});markBackedUp();return}
+ }catch(e){if(e&&e.name==='AbortError')return} // cancelled the share sheet — not backed up yet
+ const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=name;document.body.appendChild(a);a.click();a.remove();
+ setTimeout(()=>URL.revokeObjectURL(a.href),4000);markBackedUp();
+}
+function askImportMode(info){
+ return new Promise(resolve=>{
+  const wrap=document.createElement('div');wrap.className='modalback no-print';
+  wrap.innerHTML=`<div class="modalbox"><h3>Import backup</h3><p><b>${info}</b></p><p><b>Merge</b> adds new jobs and updates any that are newer, and keeps everything else already on this device — use this to combine other devices' backups.</p><p><b>Replace</b> swaps everything on this device for what is in the file.</p><div class="actions" style="margin-top:12px"><button class="primary" data-m="merge">Merge (recommended)</button><button class="danger" data-m="replace">Replace everything</button><button data-m="">Cancel</button></div></div>`;
+  wrap.addEventListener('click',e=>{const b=e.target.closest('button');if(b){wrap.remove();resolve(b.dataset.m||null)}else if(e.target===wrap){wrap.remove();resolve(null)}});
+  document.body.appendChild(wrap);
+ });
+}
+function jobSig(j){ // what "the same job" means for merge purposes (signature images compared by length only)
+ return JSON.stringify([j.job,j.order,j.customer,j.site,j.contact,j.email,j.equipment,j.model,j.serial,j.date,j.status,j.type,j.engineers,j.comments,j.defects,j.repairStatus,j.time,j.materials,j.customerName,j.customerPosition,j.callout,(j.customerSig||'').length,(j.engineerSig||'').length]);
+}
+function applyReplace(d,incoming){
+ jobs=incoming;
+ customers=Array.isArray(d.customers)?d.customers.map(String):customers;
+ if(Array.isArray(d.engineers)&&d.engineers.length)engineers=d.engineers.map(String);
+ customerRecords=cleanCustomerRecords(d.customerRecords);
+ deletedCustomers=Array.isArray(d.deletedCustomers)?d.deletedCustomers.map(String):[];
+ return 'Backup restored: '+jobs.length+' jobs.\n\nNot what you wanted? Tap "Undo last import" on the Jobs page.';
+}
+function applyMerge(d,incoming){
+ const key=j=>j.created+'|'+j.job;
+ const at=new Map(jobs.map((j,i)=>[key(j),i]));
+ let added=0,updated=0,same=0,keptLocal=0;const addedJobs=[];
+ incoming.forEach(inc=>{
+  const k=key(inc);
+  if(!at.has(k)){jobs.push(inc);at.set(k,jobs.length-1);addedJobs.push(inc);added++;return}
+  const cur=jobs[at.get(k)];
+  if(jobSig(cur)===jobSig(inc)){same++;return}
+  if((inc.updatedAt||'')>(cur.updatedAt||'')){jobs[at.get(k)]=inc;updated++}else keptLocal++;
+ });
+ const seen=new Set(customers.map(c=>c.trim().toLowerCase()));
+ (Array.isArray(d.customers)?d.customers:[]).forEach(c=>{c=String(c);const k=c.trim().toLowerCase();if(k&&!seen.has(k)&&!deletedCustomers.includes(k)){customers.push(c);seen.add(k)}});
+ const es=new Set(engineers.map(e=>e.trim().toLowerCase()));
+ (Array.isArray(d.engineers)?d.engineers:[]).forEach(e=>{e=String(e).trim();if(e&&!es.has(e.toLowerCase())){engineers.push(e);es.add(e.toLowerCase())}});
+ const cr=cleanCustomerRecords(d.customerRecords);
+ Object.keys(cr).forEach(k=>{if(!customerRecords[k])customerRecords[k]=cr[k]});
+ const counts={};jobs.forEach(j=>{counts[j.job]=(counts[j.job]||0)+1});
+ const clashes=[...new Set(addedJobs.map(j=>j.job))].filter(n=>n&&counts[n]>1);
+ let msg='Merged: '+added+' new job'+(added===1?'':'s')+', '+updated+' updated, '+same+' already up to date'+(keptLocal?', '+keptLocal+' kept as they are on this device (this device\'s copy was newer)':'')+'.';
+ if(clashes.length)msg+='\n\n⚠ Job number'+(clashes.length===1?'':'s')+' '+clashes.slice(0,10).join(', ')+(clashes.length>10?'…':'')+' now appear on more than one job — worth checking they are not duplicates.';
+ return msg;
+}
+function revertFromSnapshot(){
+ let raw=null;try{raw=localStorage.getItem(PRE_IMPORT_KEY)}catch(e){}
+ if(!raw)return false;
+ const d=JSON.parse(raw);
+ jobs=(d.jobs||[]).map(normalizeJob);customers=d.customers||[];engineers=d.engineers||[];
+ customerRecords=cleanCustomerRecords(d.customerRecords);deletedCustomers=d.deletedCustomers||[];
+ persistAll();try{localStorage.removeItem(PRE_IMPORT_KEY)}catch(e){}
+ return true;
+}
+function undoImport(){
+ if(!confirm('Undo the last import and put this device back exactly as it was before it?'))return;
+ try{if(!revertFromSnapshot()){alert('There is nothing to undo.');return}}catch(e){alert('Could not undo: '+e.message);return}
+ setupLists();home();alert('Import undone.');
+}
+function importBackup(){
+ const input=document.createElement('input');input.type='file';input.accept='.json,application/json';
+ input.onchange=()=>{
+  const f=input.files&&input.files[0];if(!f)return;
+  const r=new FileReader();
+  r.onload=async()=>{
+   let d;try{d=JSON.parse(r.result)}catch(e){d=null}
+   if(!d||!Array.isArray(d.jobs)){alert('That file is not a valid Key Engineering backup.');return}
+   const incoming=d.jobs.filter(j=>j&&typeof j==='object').map(normalizeJob);
+   const when=d.exportedAt&&!isNaN(new Date(d.exportedAt))?ukDate(localDateStr(new Date(d.exportedAt))):'unknown date';
+   const mode=await askImportMode('Backup from '+when+' — '+incoming.length+' job'+(incoming.length===1?'':'s'));
+   if(!mode)return;
+   let hadSnapshot=false;
+   try{localStorage.setItem(PRE_IMPORT_KEY,JSON.stringify(backupPayload()));hadSnapshot=true}catch(e){/* storage too full for an undo copy — carry on */}
+   try{
+    const summary=mode==='replace'?applyReplace(d,incoming):applyMerge(d,incoming);
+    persistAll();setupLists();home();alert(summary);
+   }catch(e){
+    let restored=false;try{restored=hadSnapshot&&revertFromSnapshot()}catch(e2){}
+    setupLists();home();
+    alert('The import failed ('+e.message+').'+(restored?' Nothing has been changed.':' Please check your jobs before carrying on.'));
+   }
+  };
+  r.readAsText(f);
+ };
+ input.click();
+}
+function deleteJob(no){
+ // Removes only the job you are looking at. (It used to remove EVERY job sharing that number —
+ // and the job book already has a handful of repeated numbers.)
+ const i=jobs.findIndex(x=>x.job===no);if(i<0)return;
+ if(!confirm('Delete Job '+jobs[i].job+' — '+jobs[i].customer+'?\n\nThis cannot be undone (a backup is your safety net).'))return;
+ jobs.splice(i,1);localStorage.setItem('rkey_jobs',JSON.stringify(jobs));home();
+}
 function canvasSetup(id){
  const c=document.getElementById(id),ctx=c.getContext('2d');ctx.lineWidth=2;ctx.lineCap='round';
  let down=false;function pos(e){let r=c.getBoundingClientRect(),p=e.touches?e.touches[0]:e;return{x:(p.clientX-r.left)*c.width/r.width,y:(p.clientY-r.top)*c.height/r.height}}
@@ -926,6 +1166,114 @@ function fitJobSheetToPage(){
 }
 window.addEventListener('beforeprint',fitJobSheetToPage);
 window.addEventListener('afterprint',()=>{let sheet=document.querySelector('.job-sheet');if(sheet)sheet.style.zoom=1});
+/* ---------------- weekly repairs list ---------------- */
+function repairsPage(scope){
+ hide();document.getElementById('repairs').classList.remove('hidden');
+ const pick=document.getElementById('repairsWeekPick');
+ if(!pick.value)pick.value=localDateStr(hoursWeekRange(localDateStr()).start);
+ if(scope)document.getElementById('repairsScope').value=scope;
+ window._repairUndo=null;renderRepairs();
+}
+function shiftRepairsWeek(days){
+ const pick=document.getElementById('repairsWeekPick');
+ const cur=hoursWeekRange(pick.value||localDateStr()).start;cur.setDate(cur.getDate()+days);
+ pick.value=localDateStr(cur);renderRepairs();
+}
+function repairSelection(){
+ const scope=document.getElementById('repairsScope').value;
+ const {start,end}=hoursWeekRange(document.getElementById('repairsWeekPick').value||localDateStr());
+ const s=localDateStr(start),e=localDateStr(end);
+ let items=jobs.filter(j=>j.defects&&j.defects.trim());
+ items=scope==='all'?items.filter(j=>j.repairStatus!=='Done'):items.filter(j=>j.date>=s&&j.date<=e);
+ items.sort((a,b)=>(a.customer||'').toLowerCase().localeCompare((b.customer||'').toLowerCase())||(a.date||'').localeCompare(b.date||''));
+ return {items,s,e,scope};
+}
+function repairsListHtml(sel,interactive){
+ const {items,scope}=sel;
+ if(!items.length)return '<p class="muted">'+(scope==='all'?'No outstanding repairs recorded.':'No repairs recorded on job sheets dated in this week.')+'</p>';
+ const groups=[];const byKey={};
+ items.forEach((j,idx)=>{const k=(j.customer||'Unknown').trim().toLowerCase();if(!byKey[k]){byKey[k]={name:j.customer||'Unknown',rows:[]};groups.push(byKey[k])}byKey[k].rows.push({j,idx})});
+ return groups.map(g=>`<div class="repgroup"><h4>${esc(g.name)} <span class="muted">(${g.rows.length})</span></h4>${g.rows.map(({j,idx})=>{
+  const st=j.repairStatus||'';
+  const meta=['Job '+j.job,ukDate(j.date),j.site,j.equipment?'Crane / equipment: '+j.equipment:'',j.serial?'Serial / SWL: '+j.serial:'',j.engineers.join(', ')].filter(Boolean).map(esc).join(' · ');
+  const stat=interactive
+   ?`<div class="repstatus"><button class="${st===''?'on':''}" onclick="setRepairStatus(${idx},'')">Outstanding</button><button class="${st==='Booked'?'on booked':''}" onclick="setRepairStatus(${idx},'Booked')">Booked in</button><button class="${st==='Done'?'on done':''}" onclick="setRepairStatus(${idx},'Done')">Done</button> <button onclick="openRepairJob(${idx})">Open job</button></div>`
+   :`<div class="meta" style="margin-top:4px"><b>Status:</b> ${st==='Booked'?'Booked in':st==='Done'?'Done':'Outstanding'}</div>`;
+  return `<div class="repitem"><div class="meta">${meta}</div><div class="txt">${esc(j.defects)}</div>${stat}</div>`;
+ }).join('')}</div>`).join('');
+}
+function renderRepairs(){
+ const sel=repairSelection();window._repairItems=sel.items;
+ document.getElementById('repairsWeekCtl').style.display=sel.scope==='all'?'none':'inline-flex';
+ const custs=new Set(sel.items.map(j=>(j.customer||'').trim().toLowerCase())).size;
+ document.getElementById('repairsSummary').textContent=(sel.scope==='all'?'All outstanding repairs':'Week starting '+ukDate(sel.s)+' (to '+ukDate(sel.e)+')')+' — '+sel.items.length+' item'+(sel.items.length===1?'':'s')+' across '+custs+' customer'+(custs===1?'':'s');
+ const u=window._repairUndo;
+ document.getElementById('repairsUndo').innerHTML=u?`<div class="notice ok">Job ${esc(u.job.job)} marked <b>${esc(u.now||'Outstanding')}</b>.<button onclick="undoRepairChange()">Undo</button></div>`:'';
+ document.getElementById('repairsBody').innerHTML=repairsListHtml(sel,true);
+}
+function saveJobsQuiet(){try{localStorage.setItem('rkey_jobs',JSON.stringify(jobs))}catch(e){alert('Could not save — this device may be out of storage.')}}
+function setRepairStatus(i,status){
+ const j=(window._repairItems||[])[i];if(!j)return;
+ window._repairUndo={job:j,prev:j.repairStatus||'',now:status==='Booked'?'Booked in':status==='Done'?'Done':'Outstanding'};
+ j.repairStatus=status;j.updatedAt=new Date().toISOString();_searchCache.delete(j);saveJobsQuiet();renderRepairs();
+}
+function undoRepairChange(){
+ const u=window._repairUndo;if(!u)return;
+ u.job.repairStatus=u.prev;u.job.updatedAt=new Date().toISOString();_searchCache.delete(u.job);saveJobsQuiet();window._repairUndo=null;renderRepairs();
+}
+function openRepairJob(i){const j=(window._repairItems||[])[i];if(j)openJob(j.job)}
+
+// choose page-break positions (in px) so a page never cuts through the middle of a repair item
+function repairPageBreaks(boundaries,totalH,pageH){
+ const cuts=[];let y=0;
+ while(totalH-y>pageH+1){
+  const limit=y+pageH;
+  const good=boundaries.filter(b=>b>y+pageH*0.4&&b<=limit);
+  const cut=good.length?good[good.length-1]:limit;
+  cuts.push(cut);y=cut;
+ }
+ return cuts;
+}
+function addCanvasPages(pdf,canvas,boundariesCss,cssWidth){
+ const pageW=pdf.internal.pageSize.getWidth(),pageH=pdf.internal.pageSize.getHeight();
+ const k=canvas.width/cssWidth; // canvas px per CSS px
+ const pagePx=Math.floor(canvas.width*pageH/pageW);
+ const cuts=repairPageBreaks(boundariesCss.map(b=>Math.round(b*k)),canvas.height,pagePx);
+ const edges=[0,...cuts,canvas.height];
+ for(let p=0;p<edges.length-1;p++){
+  const sy=edges[p],sh=edges[p+1]-edges[p];
+  const slice=document.createElement('canvas');slice.width=canvas.width;slice.height=sh;
+  const ctx=slice.getContext('2d');ctx.fillStyle='#fff';ctx.fillRect(0,0,slice.width,sh);
+  ctx.drawImage(canvas,0,sy,canvas.width,sh,0,0,canvas.width,sh);
+  if(p>0)pdf.addPage();
+  pdf.addImage(slice.toDataURL('image/jpeg',0.92),'JPEG',0,0,pageW,sh*pageW/canvas.width);
+ }
+}
+async function exportRepairsPdf(mode){
+ const btn=event&&event.target,orig=btn?btn.textContent:'';
+ if(btn){btn.disabled=true;btn.textContent='Generating…'}
+ let off=null;
+ try{
+  const ready=await window.pdfLibsReady;
+  if(!ready||!window.html2canvas||!window.jspdf){alert('Could not load the PDF tools — check your internet connection and try again.');return}
+  const sel=repairSelection();
+  if(!sel.items.length){alert('There are no repairs to list for this selection.');return}
+  const title=sel.scope==='all'?'Outstanding Repairs':'Repairs Required — Week starting '+ukDate(sel.s);
+  off=document.createElement('div');off.style.cssText='position:fixed;left:-99999px;top:0;width:1000px';document.body.appendChild(off);
+  off.innerHTML=`<div class="job-sheet" style="background-image:none"><div class="company" style="display:flex;align-items:center;gap:12px"><img src="logo-header.png" alt="" style="height:52px;width:auto;flex-shrink:0"><div style="text-align:left"><strong>KEY ENGINEERING CHESTERFIELD LTD</strong><br>Repairs required from completed inspection reports</div></div><div class="title" style="font-size:18px">${esc(title)}</div><div style="margin:8px 2px 4px;font-size:12px">Prepared ${esc(ukDate(localDateStr()))} · ${sel.items.length} item${sel.items.length===1?'':'s'}</div>${repairsListHtml(sel,false)}</div>`;
+  await waitForImages(off);
+  const sheet=off.firstElementChild,top=sheet.getBoundingClientRect().top;
+  const bounds=[...sheet.querySelectorAll('.repgroup,.repitem')].filter(el=>!(el.classList.contains('repitem')&&el.previousElementSibling&&el.previousElementSibling.tagName==='H4')).map(el=>el.getBoundingClientRect().top-top);
+  const canvas=await html2canvas(sheet,{scale:2,useCORS:true,backgroundColor:'#ffffff'});
+  const {jsPDF}=window.jspdf;const pdf=new jsPDF('p','mm','a4');
+  addCanvasPages(pdf,canvas,bounds,sheet.getBoundingClientRect().width);
+  const name=(sel.scope==='all'?'Outstanding Repairs - '+ukDate(localDateStr()):'Repairs Required - Week starting '+ukDate(sel.s))+'.pdf';
+  const blob=pdf.output('blob'),file=new File([blob],name,{type:'application/pdf'});
+  if(mode==='share'&&navigator.canShare&&navigator.canShare({files:[file]})){await navigator.share({files:[file],title:name,text:title})}
+  else{const url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download=name;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),4000)}
+ }catch(e){if(!(e&&e.name==='AbortError'))alert('Could not create the PDF: '+e.message)}
+ finally{if(off)off.remove();if(btn){btn.disabled=false;btn.textContent=orig}}
+}
 setupLists();renderJobs();setTimeout(initCanvases,100)
 let printParam=new URLSearchParams(location.search).get('print');
 if(printParam){
