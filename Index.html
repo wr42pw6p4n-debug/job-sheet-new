@@ -144,7 +144,18 @@ loadWithFallback(['https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.mi
 
 <section id="customers" class="card no-print hidden">
 <h2>Customers</h2>
-<div class="muted" style="margin-bottom:8px">Tap a customer to start a new job pre-filled with their details. Use ✎ to save their site, contact and email for next time.</div>
+<div class="muted" style="margin-bottom:8px">Add a new customer below. The postcode is saved with the customer and will be used automatically for round-trip mileage on future jobs.</div>
+<div class="custedit" style="margin-bottom:12px">
+<h3 style="margin-top:0">＋ Add New Customer</h3>
+<div class="grid">
+ <div><label>Customer / Company</label><input id="newCustName" placeholder="Company name"></div>
+ <div><label>Location / Site</label><input id="newCustSite" placeholder="Site address"></div>
+ <div><label>Customer Postcode</label><input id="newCustPostcode" placeholder="e.g. S41 9EY" autocomplete="postal-code"></div>
+ <div><label>Site Contact(s)</label><input id="newCustContact" placeholder="Contact name"></div>
+ <div><label>Customer Email</label><input id="newCustEmail" type="email" placeholder="name@company.com"></div>
+</div>
+<div class="actions" style="margin-top:8px"><button class="primary" onclick="addNewCustomer()">Save Customer</button></div>
+</div>
 <input id="custSearch" placeholder="Search customers…" oninput="renderCustomers()">
 <div id="customerView"></div>
 </section>
@@ -522,6 +533,27 @@ function renderCustomers(){
   }
   return rowHtml;
  }).join(''):'<p class="muted">No customers found.</p>';
+}
+function addNewCustomer(){
+ let name=document.getElementById('newCustName').value.trim();
+ let site=document.getElementById('newCustSite').value.trim();
+ let postcode=document.getElementById('newCustPostcode').value.trim().toUpperCase();
+ let contact=document.getElementById('newCustContact').value.trim();
+ let email=document.getElementById('newCustEmail').value.trim();
+ if(!name){alert('Please enter the customer/company name.');return}
+ let key=name.toLowerCase();
+ let existing=customers.find(c=>c.trim().toLowerCase()===key);
+ if(existing){
+  if(!confirm('"'+existing+'" already exists. Update its saved details?'))return;
+  name=existing;
+ }else{customers.push(name)}
+ if(!postcode)postcode=extractPostcode(site)||'';
+ customerRecords[key]={name:name,site:site,postcode:postcode,contact:contact,email:email};
+ localStorage.setItem('rkey_customers',JSON.stringify(customers));
+ saveCustomerRecords();
+ ['newCustName','newCustSite','newCustPostcode','newCustContact','newCustEmail'].forEach(id=>document.getElementById(id).value='');
+ setupLists();renderCustomers();
+ alert('Customer saved. The postcode will be used automatically for mileage on future jobs.');
 }
 function toggleEditCustomer(name){editingCustomer=(editingCustomer===name?null:name);renderCustomers()}
 function deleteCustomer(name){
