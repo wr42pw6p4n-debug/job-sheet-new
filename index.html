@@ -73,7 +73,7 @@ loadWithFallback(['https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.mi
 </script>
 </head>
 <body>
-<header class="no-print"><div class="head"><div style="display:flex;align-items:center;gap:10px"><img src="logo-header.png" alt="Key Engineering logo" style="height:38px;width:auto;flex-shrink:0"><h1>Key Engineering Chesterfield LTD — Job Manager <span style="font-size:11px;font-weight:400;opacity:.55">build 2026-09-25.1</span></h1></div><span id="counter"></span></div></header>
+<header class="no-print"><div class="head"><div style="display:flex;align-items:center;gap:10px"><img src="logo-header.png" alt="Key Engineering logo" style="height:38px;width:auto;flex-shrink:0"><h1>Key Engineering Chesterfield LTD — Job Manager <span style="font-size:11px;font-weight:400;opacity:.55">build 2026-09-27.1</span></h1></div><span id="counter"></span></div></header>
 <div class="wrap">
 <div class="nav no-print">
 <button class="primary" onclick="newJob()">＋ New Job</button><button onclick="home()">Jobs</button><button onclick="customersPage()">Customers</button><button onclick="engineersPage()">Engineers</button>
@@ -664,6 +664,35 @@ async function downloadHoursPdf(){
  }catch(e){alert('Could not generate the PDF: '+e.message)}
  finally{if(btn){btn.disabled=false;btn.textContent=originalLabel}}
 }
+function computeEngineerWeekTotals(engName,startStr,endStr){
+ let t={nt:0,ot:0,dt:0,mile:0,callouts:new Set()};
+ jobs.forEach(j=>{
+  (j.time||[]).forEach(r=>{
+   if(!r.date||r.date<startStr||r.date>endStr)return;
+   let eng=(r.eid||'').trim()||(j.engineers&&j.engineers[0])||'Unassigned';
+   if(!engineerNamesMatch(eng,engName))return;
+   t.nt+=(+r.nt||0);t.ot+=(+r.ot||0);t.dt+=(+r.dt||0);t.mile+=(+r.mile||0);
+   if(j.callout)t.callouts.add(j.job);
+  });
+ });
+ return t;
+}
+function weeklyHoursSummaryHtml(engName,startStr,endStr){
+ let t=computeEngineerWeekTotals(engName,startStr,endStr);
+ let tot=t.nt+t.ot+t.dt;
+ return `<div class="job-sheet">
+ <div class="company" style="display:flex;align-items:center;gap:12px">
+ <img src="logo-header.png" alt="Key Engineering logo" style="height:52px;width:auto;flex-shrink:0">
+ <div style="text-align:left"><strong>KEY ENGINEERING CHESTERFIELD LTD</strong></div>
+ </div>
+ <div class="title">Weekly Hours — ${esc(engName)}</div>
+ <div style="font-weight:700;font-size:16px;margin:14px 2px">Week starting ${esc(ukDate(startStr))} (to ${esc(ukDate(endStr))})</div>
+ <table class="hourstable">
+  <tr><th>N/T</th><th>O/T</th><th>D/T</th><th>Total Hrs</th><th>Call-outs</th><th>Mileage</th></tr>
+  <tr><td>${t.nt.toFixed(2)}</td><td>${t.ot.toFixed(2)}</td><td>${t.dt.toFixed(2)}</td><td><b>${tot.toFixed(2)}</b></td><td>${t.callouts.size||0}</td><td>${t.mile?Math.round(t.mile):0}</td></tr>
+ </table>
+ </div>`;
+}
 function jobsForEngineerWeek(engName,startStr,endStr){
  let matched=jobs.filter(j=>(j.time||[]).some(r=>{
   if(!r.date||r.date<startStr||r.date>endStr)return false;
@@ -700,30 +729,38 @@ async function downloadWeeklyJobSheetsPdf(){
   let{jsPDF}=window.jspdf;
   let pdf=new jsPDF('p','mm','a4');
   let pageW=pdf.internal.pageSize.getWidth(),pageH=pdf.internal.pageSize.getHeight();
-
-  for(let i=0;i<matched.length;i++){
-   if(btn)btn.textContent='Generating… ('+(i+1)+'/'+matched.length+')';
-   offscreen.innerHTML=jobSheetHtml(matched[i]);
+  let pageCount=0;
+  async function addPageFromHtml(html){
+   offscreen.innerHTML=html;
    await waitForImages(offscreen);
    let sheet=offscreen.querySelector('.job-sheet');
    let canvas=await html2canvas(sheet,{scale:2,useCORS:true,backgroundColor:'#ffffff'});
    let imgW=pageW,imgH=canvas.height*imgW/canvas.width;
    let img=canvas.toDataURL('image/jpeg',0.92);
-   if(i>0)pdf.addPage();
+   if(pageCount>0)pdf.addPage();
    if(imgH<=pageH){pdf.addImage(img,'JPEG',0,0,imgW,imgH)}
    else{let scale=pageH/imgH;pdf.addImage(img,'JPEG',0,0,imgW*scale,pageH)}
+   pageCount++;
+  }
+
+  // Page 1: the week's hours totals for this engineer, then every matching job sheet after it.
+  if(btn)btn.textContent='Generating… (totals)';
+  await addPageFromHtml(weeklyHoursSummaryHtml(hoursEngineerFilter,startStr,endStr));
+  for(let i=0;i<matched.length;i++){
+   if(btn)btn.textContent='Generating… ('+(i+1)+'/'+matched.length+')';
+   await addPageFromHtml(jobSheetHtml(matched[i]));
   }
 
   let filename='Weekly Job Sheets - '+safeName(hoursEngineerFilter)+' - Week starting '+safeName(ukDate(startStr))+'.pdf';
   let blob=pdf.output('blob');
   let file=new File([blob],filename,{type:'application/pdf'});
   if(navigator.canShare&&navigator.canShare({files:[file]})){
-   await navigator.share({files:[file],title:filename,text:'Job Sheets / '+hoursEngineerFilter+' / Week starting '+ukDate(startStr)+' ('+matched.length+' job'+(matched.length===1?'':'s')+')'});
+   await navigator.share({files:[file],title:filename,text:'Job Sheets / '+hoursEngineerFilter+' / Week starting '+ukDate(startStr)+' (totals + '+matched.length+' job'+(matched.length===1?'':'s')+')'});
   }else{
    let url=URL.createObjectURL(blob);
    let a=document.createElement('a');a.href=url;a.download=filename;document.body.appendChild(a);a.click();a.remove();
    setTimeout(()=>URL.revokeObjectURL(url),4000);
-   alert('Saved as "'+filename+'" ('+matched.length+' job sheet'+(matched.length===1?'':'s')+'). In Files, choose "Save to OneDrive" and file it under:\nJob Sheets / '+hoursEngineerFilter+' / Week starting '+ukDate(startStr));
+   alert('Saved as "'+filename+'" (totals + '+matched.length+' job sheet'+(matched.length===1?'':'s')+'). In Files, choose "Save to OneDrive" and file it under:\nJob Sheets / '+hoursEngineerFilter+' / Week starting '+ukDate(startStr));
   }
  }catch(e){
   if(e&&e.name==='AbortError'){}else{alert('Could not generate the combined PDF: '+e.message)}
