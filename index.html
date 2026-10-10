@@ -12,7 +12,7 @@
 <style>
 *{box-sizing:border-box}body{margin:0;background:#eef1f4;color:#111;font-family:Arial,Helvetica,sans-serif}
 header{background:#17232d;color:#fff;padding:14px 18px;position:sticky;top:0;z-index:10}.head{max-width:1180px;margin:auto;display:flex;justify-content:space-between;align-items:center}
-h1{font-size:20px;margin:0}.wrap{max-width:1180px;margin:auto;padding:15px}.nav{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px}
+h1{font-size:20px;margin:0}.wrap{max-width:1180px;margin:auto;padding:15px}.nav{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px;position:sticky;top:var(--hh,56px);z-index:9;background:#eef1f4;padding:8px 0;box-shadow:0 6px 6px -6px rgba(0,0,0,.25)}
 button{border:1px solid #c4ccd2;border-radius:7px;background:#fff;padding:10px 14px;font-weight:700;cursor:pointer}.primary{background:#1769aa;color:#fff;border-color:#1769aa}.danger{background:#b42318;color:#fff;border-color:#b42318}
 .card{background:#fff;border-radius:10px;padding:16px;margin-bottom:14px;box-shadow:0 1px 5px #0002}.hidden{display:none}.muted{color:#68747d;font-size:12px}
 .grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}.grid4{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
@@ -20,7 +20,7 @@ label{font-size:12px;font-weight:700;display:block;margin-bottom:4px}input,selec
 .jobrow{display:flex;justify-content:space-between;align-items:center;gap:10px;border:1px solid #d5dce1;border-radius:8px;padding:12px;margin:7px 0}.pill{font-size:11px;border-radius:20px;padding:5px 8px;background:#e7f1fb;color:#145c8d;font-weight:700}
 hr{border:0;border-top:1px solid #d2d8dd;margin:18px 0}
 .sigcanvas{border:1px solid #222;border-radius:5px;background:#fff;width:100%;height:130px;touch-action:none}.sig-actions{margin-top:5px}
-.actions{display:flex;gap:7px;flex-wrap:wrap}.dashgrid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin:10px 0}.dashcard{border:1px solid #d5dce1;border-radius:9px;padding:12px;background:#fff;cursor:pointer}.dashcard strong{display:block;font-size:24px;margin-top:3px}.dashcard small{color:#68747d}.attention{border-left:4px solid #c0392b}.backupbar{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}.stat{display:inline-block;background:#f5f7f8;border:1px solid #d7dde1;border-radius:7px;padding:8px 10px;margin:3px;font-size:12px}
+.actions{display:flex;gap:7px;flex-wrap:wrap}.dashgrid{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin:10px 0}.dashcard{border:1px solid #d5dce1;border-radius:9px;padding:12px;background:#fff;cursor:pointer}.dashcard strong{display:block;font-size:24px;margin-top:3px}.dashcard small{color:#68747d}.attention{border-left:4px solid #c0392b}.backupbar{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}.stat{display:inline-block;background:#f5f7f8;border:1px solid #d7dde1;border-radius:7px;padding:8px 10px;margin:3px;font-size:12px}
 .job-sheet{max-width:1000px;margin:auto;background-color:#fff;background-image:url('watermark.png');background-repeat:no-repeat;background-position:center;background-size:auto 92%;-webkit-print-color-adjust:exact;print-color-adjust:exact;color:#000;padding:22px}
 .company{text-align:center;border:1px solid #111;padding:7px;font-size:10px;line-height:1.35}.company strong{font-size:14px}
 .title{border:2px solid #111;border-top:0;text-align:center;font-weight:bold;font-size:22px;padding:9px}
@@ -58,6 +58,19 @@ button[disabled]{opacity:.55;cursor:wait}
 .repstatus{display:inline-flex;gap:4px;margin-top:8px;flex-wrap:wrap}.repstatus button{padding:6px 10px;font-size:12px}
 .repstatus button.on{background:#1769aa;color:#fff;border-color:#1769aa}.repstatus button.on.booked{background:#e08a00;border-color:#e08a00}.repstatus button.on.done{background:#2e7d32;border-color:#2e7d32}
 .repbadge{display:inline-block;font-size:11px;font-weight:700;border-radius:6px;padding:2px 7px;background:#e08a00;color:#fff;margin-left:8px;vertical-align:middle}
+
+.invcard{padding:12px;border-top:1px solid #e3e8ec}
+.invcard .meta{font-size:12px;color:#55616a;margin-bottom:6px}
+.invline{display:flex;justify-content:space-between;gap:10px;font-size:14px;padding:2px 0}
+.invline .k{color:#33414a}.invline .v{font-variant-numeric:tabular-nums;white-space:nowrap}
+.invtotal{display:flex;justify-content:space-between;font-weight:700;border-top:1px solid #d5dce1;margin-top:6px;padding-top:6px}
+.invmat{background:#f7f9fb;border:1px dashed #b9c4cc;border-radius:8px;padding:8px 10px;margin:8px 0}
+.invmat .row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}.invmat summary{cursor:pointer}
+.ratesgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(135px,1fr));gap:8px}
+.invtable{width:100%;border-collapse:collapse;font-size:11px}
+.invtable th,.invtable td{border:1px solid #111;padding:5px 6px;vertical-align:top;text-align:left}
+.invtable th{background:#e8e8e8}.invtable td.r,.invtable th.r{text-align:right;white-space:nowrap}
+.invtable tr.tot td{font-weight:700;background:#f2f2f2}
 </style>
 <script>
 // Loads a lib from a primary CDN, falling back to a mirror if the first is blocked/unreachable.
@@ -85,10 +98,10 @@ loadWithFallback(['https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.mi
 </script>
 </head>
 <body>
-<header class="no-print"><div class="head"><div style="display:flex;align-items:center;gap:10px"><img src="logo-header.png" alt="Key Engineering logo" style="height:38px;width:auto;flex-shrink:0"><h1>Key Engineering Chesterfield LTD — Job Manager <span style="font-size:11px;font-weight:400;opacity:.55">build 2026-09-28.2</span></h1></div><span id="counter"></span></div></header>
+<header class="no-print"><div class="head"><div style="display:flex;align-items:center;gap:10px"><img src="logo-header.png" alt="Key Engineering logo" style="height:38px;width:auto;flex-shrink:0"><h1>Key Engineering Chesterfield LTD — Job Manager <span style="font-size:11px;font-weight:400;opacity:.55">build 2026-10-10.1</span></h1></div><span id="counter"></span></div></header>
 <div class="wrap">
 <div class="nav no-print">
-<button class="primary" onclick="newJob()">＋ New Job</button><button onclick="home()">Jobs</button><button onclick="customersPage()">Customers</button><button onclick="engineersPage()">Engineers</button><button onclick="repairsPage()">🔧 Repairs</button>
+<button class="primary" onclick="newJob()">＋ New Job</button><button onclick="home()">Jobs</button><button onclick="customersPage()">Customers</button><button onclick="engineersPage()">Engineers</button><button onclick="repairsPage()">🔧 Repairs</button><button onclick="invoicesPage()">🧾 Invoices</button><button onclick="quotesPage()">📝 Quotes</button>
 </div>
 
 <section id="home" class="card no-print">
@@ -114,6 +127,7 @@ loadWithFallback(['https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.mi
 <div class="grid">
 <div><label>Job No.</label><input id="f_job" oninput="jobNumberChanged()"></div>
 <div><label>Customer Order No.</label><input id="f_order" oninput="orderNumberChanged()"></div>
+<div><label>Quote No. (optional)</label><input id="f_quote" list="quoteOptions" oninput="quoteNumberChanged()" placeholder="adds this sheet to the quote"></div><datalist id="quoteOptions"></datalist>
 <div><label>Customer (quick select)</label><select id="f_customerSelect" onchange="selectExistingCustomer()"></select></div>
 <div><label>Customer / Company (type to add new)</label><input id="f_customer" list="customerOptions" oninput="customerChanged()" placeholder="Start typing a new customer name…"><datalist id="customerOptions"></datalist></div>
 <div><label>Customer Email</label><input id="f_email" type="email" placeholder="name@company.com"></div>
@@ -166,6 +180,11 @@ loadWithFallback(['https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.mi
 <section id="engineers" class="card no-print hidden">
 <h2>Engineers</h2>
 <div class="muted" style="margin-bottom:8px">Rename or remove engineers from the picker used on job sheets. This doesn't change engineers already recorded on past jobs.</div>
+<div class="no-print" style="margin:8px 0;display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+ <label style="margin:0 4px 0 0">Invoices for week starting</label>
+ <input type="date" id="engWeekPick" onchange="renderEngineers()" style="width:auto">
+ <button onclick="shiftEngWeek(-7)">◀ Prev week</button><button onclick="shiftEngWeek(7)">Next week ▶</button>
+</div>
 <div id="engineerView"></div>
 <div class="actions" style="margin-top:10px"><input id="newEngineerName" placeholder="New engineer name" style="flex:1" onkeydown="if(event.key==='Enter')addEngineer()"><button class="primary" onclick="addEngineer()">+ Add</button></div>
 </section>
@@ -178,6 +197,7 @@ loadWithFallback(['https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.mi
  <button onclick="shiftHoursWeek(7)">Next week ▶</button>
  <button class="primary" onclick="downloadHoursPdf()">⬇ Download PDF</button>
  <button onclick="downloadWeeklyJobSheetsPdf()">📎 Merge Job Sheets This Week</button>
+ <button onclick="exportHoursEngineerInvoices()">🧾 Merge Invoices This Week</button>
 </div>
 <div id="hoursPrintArea">
  <h2 id="hoursHeading">Weekly Hours</h2>
@@ -185,6 +205,48 @@ loadWithFallback(['https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.mi
  <div class="muted no-print" style="margin-bottom:10px;font-size:12px">Totals are pulled straight from every job sheet's time entries that fall in this week (Mon–Sun), grouped by whichever engineer is set on each row — or the first engineer listed on the job if a row doesn't specify one. Call-outs shows how many call-out jobs each engineer attended that week.</div>
  <div id="hoursCardBody"></div>
 </div>
+</section>
+<section id="quotes" class="card hidden"><button class="no-print" onclick="home()" style="margin-bottom:10px">← Back to Jobs</button><div id="quotesBody"></div></section>
+<section id="quoteSheet" class="card hidden"><div id="quoteSheetBody"></div></section>
+<section id="invoices" class="card hidden">
+<button class="no-print" onclick="home()" style="margin-bottom:10px">← Back to Jobs</button>
+<h2>Invoices</h2>
+<div class="muted" style="margin-bottom:10px">Every completed job sheet, costed from your rates. Type the materials cost on each job and it is ready to invoice.</div>
+<div id="invNotices"></div>
+<details id="invRatesBox" class="invmat" style="margin-bottom:10px">
+ <summary><b>Rates</b> <span id="invRatesState" class="muted"></span></summary>
+ <div class="ratesgrid" style="margin-top:8px">
+  <div><label>Normal time £/hr (N/T)</label><input id="rate_nt" type="number" min="0" step="0.01" inputmode="decimal"></div>
+  <div><label>Overtime 1 £/hr (O/T)</label><input id="rate_ot" type="number" min="0" step="0.01" inputmode="decimal"></div>
+  <div><label>Overtime 2 £/hr (D/T)</label><input id="rate_dt" type="number" min="0" step="0.01" inputmode="decimal"></div>
+  <div><label>Mileage £/mile</label><input id="rate_mile" type="number" min="0" step="0.001" inputmode="decimal"></div>
+  <div><label>Call-out fee £ (per engineer)</label><input id="rate_callout" type="number" min="0" step="0.01" inputmode="decimal"></div>
+  <div><label>VAT % (0 if not registered)</label><input id="rate_vat" type="number" min="0" max="100" step="0.01" inputmode="decimal"></div>
+ </div>
+ <div class="actions" style="margin-top:8px"><button class="primary" onclick="saveRates()">Save rates</button></div>
+ <div class="muted" style="font-size:12px;margin-top:6px">Enter 0 for anything you don't charge. These are saved on this device only — they are not in the app file or in backups, so they stay private.</div>
+</details>
+<div class="no-print" style="margin-bottom:10px;display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+ <label style="margin:0 4px 0 0">Show</label>
+ <select id="invScope" onchange="renderInvoices()" style="width:auto"><option value="week">A week's jobs</option><option value="all">Everything not yet invoiced</option></select>
+ <span id="invWeekCtl" style="display:inline-flex;gap:8px;align-items:center;flex-wrap:wrap">
+  <label style="margin:0 0 0 6px">Week starting</label>
+  <input type="date" id="invWeekPick" onchange="renderInvoices()" style="width:auto">
+  <button onclick="shiftInvWeek(-7)">◀ Prev week</button>
+  <button onclick="shiftInvWeek(7)">Next week ▶</button>
+ </span>
+</div>
+<div class="actions no-print" style="margin-bottom:10px">
+ <button onclick="importBackup({invoices:true})">⬆ Add engineers' jobs</button>
+ <button class="primary" onclick="exportInvoicesPdf('download')">⬇ Worksheet PDF</button>
+ <button onclick="exportInvoicesPdf('share')">📤 Share PDF</button>
+ <button onclick="exportInvoicesCsv()">⬇ CSV for accounts</button>
+</div>
+<div id="invEngCheck"></div>
+<div id="invSummary" style="font-weight:700;margin:6px 0"></div>
+<div id="invBody"></div>
+<div id="invBulk"></div>
+<div id="invExtra"></div>
 </section>
 <section id="repairs" class="card hidden">
 <button class="no-print" onclick="home()" style="margin-bottom:10px">← Back to Jobs</button>
@@ -234,9 +296,9 @@ function normalizeJob(j){
   status:['Open','In Progress','Complete'].includes(j.status)?j.status:'Open',type:s(j.type),
   engineers:Array.isArray(j.engineers)?j.engineers.map(s).filter(Boolean):[],
   comments:s(j.comments),defects:s(j.defects),repairStatus:['Booked','Done'].includes(j.repairStatus)?j.repairStatus:'',
-  time,materials:Array.isArray(j.materials)?j.materials.map(s):[],
+  time,materials:Array.isArray(j.materials)?j.materials.map(s):[],materialCosts:cleanCosts(j.materialCosts,Array.isArray(j.materials)?j.materials.length:0),quote:s(j.quote).trim(),
   customerName:s(j.customerName),customerPosition:s(j.customerPosition),
-  customerSig:img(j.customerSig),engineerSig:img(j.engineerSig),callout:!!j.callout,
+  customerSig:img(j.customerSig),engineerSig:img(j.engineerSig),callout:!!j.callout,invoice:hasInvoiceData(j)?normInvoice(j.invoice):undefined,
   created:s(j.created)||((s(j.date)||'1970-01-01')+'T00:00:00.000Z')
  });
 }
@@ -265,10 +327,10 @@ function updateCalloutBtn(){
  btn.textContent=calloutActive?'⚡ Call-out ✓':'⚡ Call-out';
 }
 function esc(v){return String(v??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]))}
-function hide(){['home','form','customers','engineers','hours','repairs','detail'].forEach(x=>document.getElementById(x).classList.add('hidden'))}
+function hide(){['home','form','customers','engineers','hours','repairs','invoices','quotes','quoteSheet','detail'].forEach(x=>document.getElementById(x).classList.add('hidden'))}
 function home(){window._jobFilterStatus=null;window._jobFilterDefects=false;window._jobFilterToday=false;window._showAllJobs=false;hide();document.getElementById('home').classList.remove('hidden');renderJobs()}
 function nextJob(){let n=jobs.map(j=>parseInt(j.job,10)).filter(Number.isFinite);return String((n.length?Math.max(...n):0)+1)}
-function setupLists(){customerOptions.innerHTML=customers.map(x=>`<option value="${esc(x)}"></option>`).join('');document.getElementById('engineerOptions').innerHTML=engineers.map(x=>`<option value="${esc(x)}"></option>`).join('');document.getElementById('f_type').innerHTML=types.map(x=>`<option>${esc(x)}</option>`).join('');
+function setupLists(){customerOptions.innerHTML=customers.map(x=>`<option value="${esc(x)}"></option>`).join('');document.getElementById('quoteOptions').innerHTML=quotes.filter(q=>q.status==='Open').map(q=>`<option value="${esc(q.number)}">${esc(q.customer)}</option>`).join('');document.getElementById('engineerOptions').innerHTML=engineers.map(x=>`<option value="${esc(x)}"></option>`).join('');document.getElementById('f_type').innerHTML=types.map(x=>`<option>${esc(x)}</option>`).join('');
  let sel=document.getElementById('f_customerSelect');
  let current=sel.value;
  sel.innerHTML='<option value="">— Select existing customer —</option><option value="__new__">+ Add a new customer…</option>'+[...customers].sort((a,b)=>a.localeCompare(b)).map(x=>`<option value="${esc(x)}">${esc(x)}</option>`).join('');
@@ -290,7 +352,7 @@ function selectExistingCustomer(){
 function newJob(){
  hide();document.getElementById('form').classList.remove('hidden');setupLists();f_job.value=nextJob();f_date.value=localDateStr();
  editingJobNo=null;document.getElementById('formHeading').textContent='New Job Order';
- ['f_order','f_customer','f_customerSelect','f_email','f_site','f_contact','f_equipment','f_model','f_serial','f_defects','f_repairStatus','e1','e2','e3','e4','f_comments','custName','custPosition'].forEach(x=>document.getElementById(x).value='');
+ ['f_order','f_quote','f_customer','f_customerSelect','f_email','f_site','f_contact','f_equipment','f_model','f_serial','f_defects','f_repairStatus','e1','e2','e3','e4','f_comments','custName','custPosition'].forEach(x=>document.getElementById(x).value='');
  timeRows=[];matRows=[];addTimeRow();renderMaterials();clearSig('customerSig');clearSig('engineerSig');
  calloutActive=false;updateCalloutBtn();mileageReq++;setMileageStatus('');
 }
@@ -319,7 +381,8 @@ function editJob(no){
  document.getElementById('custName').value=j.customerName||'';
  document.getElementById('custPosition').value=j.customerPosition||'';
  timeRows=(j.time||[]).map(r=>({...r}));if(!timeRows.length)timeRows.push({date:j.date||localDateStr(),nt:'',ot:'',dt:'',mile:'',eid:''});
- matRows=(j.materials||[]).map(desc=>({desc}));
+ matRows=(j.materials||[]).map((desc,i)=>({desc,cost:costOrBlank((j.materialCosts||[])[i])}));
+ document.getElementById('f_quote').value=j.quote||'';
  renderTime();renderMaterials();
  calloutActive=!!j.callout;updateCalloutBtn();mileageReq++;setMileageStatus('');
  clearSig('customerSig');clearSig('engineerSig');
@@ -377,7 +440,10 @@ function orderNumberChanged(){
  if(match)fillFromOriginalJobSheet(match);
 }
 function addTimeRow(d='',nt='',ot='',dt='',mile='',eid=''){
- timeRows.push({date:d||localDateStr(),nt,ot,dt,mile,eid});renderTime()
+ const row={date:d||localDateStr(),nt,ot,dt,mile,eid};
+ // an extra date is another trip to the same site: carry the round-trip mileage over (still replaceable if the site changes)
+ if(!mile&&timeRows.length){const prev=[...timeRows].reverse().find(r=>+r.mile>0);if(prev){row.mile=prev.mile;if(autoMileRows.has(prev))autoMileRows.add(row)}}
+ timeRows.push(row);renderTime()
 }
 function renderTime(){
  let timeRowsEl=document.getElementById('timeRows');
@@ -387,14 +453,14 @@ function renderTime(){
  <div><label>O/T</label><input type="number" step=".25" value="${esc(r.ot)}" onchange="timeRows[${i}].ot=this.value"></div>
  <div><label>D/T</label><input type="number" step=".25" value="${esc(r.dt)}" onchange="timeRows[${i}].dt=this.value"></div>
  <div><label>Mileage</label><input type="number" step="any" inputmode="decimal" value="${esc(r.mile)}" onchange="timeRows[${i}].mile=this.value;autoMileRows.delete(timeRows[${i}])"></div>
- <div><label>Engineer ID</label><input value="${esc(r.eid)}" onchange="timeRows[${i}].eid=this.value"></div>
+ <div><label>Engineer ID</label><input value="${esc(r.eid)}" placeholder="all on job" list="engineerOptions" onchange="timeRows[${i}].eid=this.value"></div>
  <div><button class="danger" style="width:100%" onclick="timeRows.splice(${i},1);renderTime()">Remove</button></div>
  </div>`).join('');
 }
-function addMaterialRow(desc=''){matRows.push({desc});renderMaterials()}
+function addMaterialRow(desc=''){matRows.push({desc,cost:''});renderMaterials()}
 function renderMaterials(){
  let matRowsEl=document.getElementById('matRows');
- matRowsEl.innerHTML=matRows.map((r,i)=>`<div style="margin-bottom:6px;display:flex;gap:6px"><input style="flex:1" placeholder="Description / Material Used" value="${esc(r.desc)}" onchange="matRows[${i}].desc=this.value"><button class="danger" onclick="matRows.splice(${i},1);renderMaterials()">Remove</button></div>`).join('');
+ matRowsEl.innerHTML=matRows.map((r,i)=>`<div style="margin-bottom:6px;display:flex;gap:6px;flex-wrap:wrap"><input style="flex:1;min-width:150px" placeholder="Description / Material Used" value="${esc(r.desc)}" onchange="matRows[${i}].desc=this.value"><input type="number" min="0" step="0.01" inputmode="decimal" style="width:110px" placeholder="Cost £" title="Invoice only — never printed on the job sheet" value="${esc(r.cost==null?'':r.cost)}" onchange="matRows[${i}].cost=this.value"><button class="danger" onclick="matRows.splice(${i},1);renderMaterials()">Remove</button></div>`).join('')+(matRows.length?'<div class="muted" style="font-size:12px;margin-bottom:6px">The cost is for the invoice only — it is never shown on the job sheet.</div>':'');
 }
 function saveJob(){
  const v=id=>document.getElementById(id).value;
@@ -402,7 +468,7 @@ function saveJob(){
   job:v('f_job'),order:v('f_order'),customer:v('f_customer'),site:v('f_site'),
   contact:v('f_contact'),equipment:v('f_equipment'),model:v('f_model'),serial:v('f_serial'),email:v('f_email').trim(),date:v('f_date'),status:v('f_status'),type:v('f_type'),
   engineers:['e1','e2','e3','e4'].map(v).filter(Boolean),
-  comments:v('f_comments'),defects:v('f_defects'),repairStatus:v('f_defects').trim()?v('f_repairStatus'):'',updatedAt:new Date().toISOString(),time:timeRows,materials:matRows.map(x=>x.desc).filter(Boolean),
+  comments:v('f_comments'),defects:v('f_defects'),repairStatus:v('f_defects').trim()?v('f_repairStatus'):'',updatedAt:new Date().toISOString(),time:timeRows,materials:matRows.filter(x=>x.desc).map(x=>x.desc),materialCosts:cleanCosts(matRows.filter(x=>x.desc).map(x=>x.cost),matRows.filter(x=>x.desc).length),quote:v('f_quote').trim(),
   customerName:v('custName'),customerPosition:v('custPosition'),callout:calloutActive,
   customerSig:document.getElementById('customerSig').toDataURL(),
   engineerSig:document.getElementById('engineerSig').toDataURL(),
@@ -413,7 +479,7 @@ function saveJob(){
  if(editingJobNo!==null){
   let idx=jobs.findIndex(x=>x.job===editingJobNo);
   if(idx===-1){alert('Could not find the original job to update — it may have been deleted.');return}
-  j.created=jobs[idx].created||j.created;
+  j.created=jobs[idx].created||j.created;j.invoice=jobs[idx].invoice;
   if(j.email===jobs[idx].email)j.completionEmailSentAt=jobs[idx].completionEmailSentAt||'';
   jobs[idx]=j;
  }else{
@@ -431,6 +497,7 @@ function saveJob(){
   saveCustomerRecords();
  }
  if(j.status==='Complete'&&j.email&&!j.completionEmailSentAt)sendCompletionEmail(j);
+ afterSaveQuote(j);
  editingJobNo=null;
  openJob(j.job);
 }
@@ -446,7 +513,7 @@ function searchText(j){
  // version searched the whole JSON, signatures included, on every keystroke).
  let t=_searchCache.get(j);
  if(t===undefined){
-  t=[j.job,j.order,j.customer,j.site,j.contact,j.email,j.equipment,j.model,j.serial,j.type,j.status,j.engineers.join(' '),j.comments,j.defects,j.materials.join(' '),j.customerName,j.customerPosition,dateForms(j.date),(j.time||[]).map(r=>dateForms(r.date)+' '+r.eid).join(' '),j.callout?'call-out callout':''].join(' ').toLowerCase();
+  t=[j.job,j.order,j.customer,j.site,j.contact,j.email,j.equipment,j.model,j.serial,j.type,j.status,j.engineers.join(' '),j.comments,j.defects,j.materials.join(' '),j.quote||'',j.customerName,j.customerPosition,dateForms(j.date),(j.time||[]).map(r=>dateForms(r.date)+' '+r.eid).join(' '),j.callout?'call-out callout':''].join(' ').toLowerCase();
   _searchCache.set(j,t);
  }
  return t;
@@ -459,7 +526,7 @@ function renderJobs(){
  const a=jobs.filter(j=>(!st||j.status===st)&&(!dfx||(j.defects&&j.defects.trim()))&&(!td||jobIsToday(j,today))&&(!q||searchText(j).includes(q))).sort((x,y)=>(y.created||'').localeCompare(x.created||''));
  const open=jobs.filter(x=>x.status==='Open').length,progress=jobs.filter(x=>x.status==='In Progress').length,complete=jobs.filter(x=>x.status==='Complete').length;
  const todayJobs=jobs.filter(x=>jobIsToday(x,today)).length,repairs=jobs.filter(hasOpenRepair).length;
- document.getElementById('dashboardCards').innerHTML=`<div class="dashcard" onclick="filterJobsByStatus('Open')"><small>Open</small><strong>${open}</strong></div><div class="dashcard" onclick="filterJobsByStatus('In Progress')"><small>In Progress</small><strong>${progress}</strong></div><div class="dashcard" onclick="filterJobsByStatus('Complete')"><small>Complete</small><strong>${complete}</strong></div><div class="dashcard attention" onclick="repairsPage('all')"><small>Repairs outstanding</small><strong>${repairs}</strong></div>`;
+ document.getElementById('dashboardCards').innerHTML=`<div class="dashcard" onclick="filterJobsByStatus('Open')"><small>Open</small><strong>${open}</strong></div><div class="dashcard" onclick="filterJobsByStatus('In Progress')"><small>In Progress</small><strong>${progress}</strong></div><div class="dashcard" onclick="filterJobsByStatus('Complete')"><small>Complete</small><strong>${complete}</strong></div><div class="dashcard attention" onclick="repairsPage('all')"><small>Repairs outstanding</small><strong>${repairs}</strong></div><div class="dashcard" onclick="quotesPage()"><small>Quotes open</small><strong>${quotes.filter(q=>q.status==='Open').length}</strong></div>`;
  document.getElementById('stats').innerHTML=`<span class="stat">Total: ${jobs.length}</span><span class="stat">Today: ${todayJobs}</span><span class="stat">Customers: ${customers.length}</span>`;
  const labels=[];if(st)labels.push('Status: '+st);if(td)labels.push('Today');if(dfx)labels.push('With defects');
  document.getElementById('filterChip').innerHTML=labels.length?`<span class="filterchip">Showing: ${esc(labels.join(' + '))} · ${a.length} job${a.length===1?'':'s'}<button onclick="clearJobFilters()">✕ Clear</button></span>`:'';
@@ -517,14 +584,17 @@ function renderHoursCard(){
  jobs.forEach(j=>{
   (j.time||[]).forEach(r=>{
    if(!r.date||r.date<startStr||r.date>endStr)return;
-   let eng=(r.eid||'').trim()||(j.engineers&&j.engineers[0])||'Unassigned';
-   if(hoursEngineerFilter){
-    if(!engineerNamesMatch(eng,hoursEngineerFilter))return;
-    eng=hoursEngineerFilter; // collapse "Dave Boler" etc. into the name that was clicked
-   }
-   if(!totals[eng])totals[eng]={nt:0,ot:0,dt:0,mile:0,callouts:new Set()};
-   totals[eng].nt+=(+r.nt||0);totals[eng].ot+=(+r.ot||0);totals[eng].dt+=(+r.dt||0);totals[eng].mile+=(+r.mile||0);
-   if(j.callout)totals[eng].callouts.add(j.job);
+   const names=rowEngineers(j,r);
+   // every engineer the row applies to is credited its hours and its own mileage (every engineer has a van)
+   const credit=hoursEngineerFilter
+    ?(names.some(n=>engineerNamesMatch(n,hoursEngineerFilter))?[{eng:hoursEngineerFilter,first:engineerNamesMatch(names[0],hoursEngineerFilter)}]:[])
+    :names.map((n,ix)=>({eng:n,first:ix===0}));
+   credit.forEach(c=>{
+    if(!totals[c.eng])totals[c.eng]={nt:0,ot:0,dt:0,mile:0,callouts:new Set()};
+    const t=totals[c.eng];
+    t.nt+=(+r.nt||0);t.ot+=(+r.ot||0);t.dt+=(+r.dt||0);t.mile+=(+r.mile||0);
+    if(j.callout)t.callouts.add(j.job);
+   });
   });
  });
  let names=Object.keys(totals).sort((a,b)=>a.localeCompare(b));
@@ -535,9 +605,13 @@ function renderHoursCard(){
 }
 let editingEngineerIdx=null;
 function renderEngineers(){
+ const wp=document.getElementById('engWeekPick');if(!wp.value)wp.value=defaultInvoiceWeekStart();
+ const wk=hoursWeekRange(wp.value),ws=localDateStr(wk.start),we=localDateStr(wk.end);wp.value=ws;
  document.getElementById('engineerView').innerHTML=engineers.length?engineers.map((name,i)=>{
+  const engJobs=engineerInvoiceJobs(name,ws,we).length;
   let rowHtml=`<div class="custrow">
    <div onclick="viewEngineerHours('${esc(name).replace(/'/g,"\\'")}')" style="flex:1"><b>${esc(name)}</b><div class="muted">Tap to see their hours</div></div>
+   <button onclick="event.stopPropagation();exportEngineerInvoicesAt(${i})" ${engJobs?'':'disabled'}>🧾 Invoices (${engJobs})</button>
    <button onclick="event.stopPropagation();toggleEditEngineer(${i})">✎ Edit</button>
    <button onclick="event.stopPropagation();removeEngineer(${i})" class="danger">Remove</button>
   </div>`;
@@ -624,7 +698,7 @@ function selectCustomer(name){
 let printLanding=false;
 function jobSheetHtml(j){
  let total=0; (j.time||[]).forEach(r=>total+=(+r.nt||0)+(+r.ot||0)+(+r.dt||0));
- let tr=(j.time||[]).map(r=>`<tr><td>${esc(ukDate(r.date))}</td><td>${esc(r.nt||'')}</td><td>${esc(r.ot||'')}</td><td>${esc(r.dt||'')}</td><td>${((+r.nt||0)+(+r.ot||0)+(+r.dt||0)).toFixed(2)}</td><td>${esc(r.mile||'')}</td><td>${esc(r.eid||j.engineers[0]||'')}</td></tr>`).join('');
+ let tr=(j.time||[]).map(r=>`<tr><td>${esc(ukDate(r.date))}</td><td>${esc(r.nt||'')}</td><td>${esc(r.ot||'')}</td><td>${esc(r.dt||'')}</td><td>${((+r.nt||0)+(+r.ot||0)+(+r.dt||0)).toFixed(2)}</td><td>${esc(r.mile||'')}</td><td>${esc(r.eid||(j.engineers||[]).join(', '))}</td></tr>`).join('');
  let mats=(j.materials||[]).map(x=>`<div>${esc(x)}</div>`).join('');
  return `<div class="job-sheet">
  <div class="company" style="display:flex;align-items:center;gap:12px">
@@ -637,7 +711,7 @@ function jobSheetHtml(j){
  </div>
  <div class="title">JOB SHEET${j.callout?'<span class="callout-badge">CALL-OUT</span>':''}</div>
  <table class="info">
- <tr><th>Job No.</th><td>${esc(j.job)}</td><th>Customer Order No.</th><td>${esc(j.order)}</td></tr>
+ <tr><th>Job No.</th><td>${esc(j.job)}${j.quote?'<div style="font-size:10px">Quote '+esc(j.quote)+'</div>':''}</td><th>Customer Order No.</th><td>${esc(j.order)}</td></tr>
  <tr><th>Customer/Company</th><td>${esc(j.customer)}${j.email?'<br><span style="font-weight:400;font-size:9px">'+esc(j.email)+'</span>':''}</td><th>Engineer(s) in Attendance</th><td>${esc(j.engineers.join(', '))}</td></tr>
  <tr><th>Location/Site</th><td>${esc(j.site)}</td><th>Date</th><td>${esc(ukDate(j.date))}</td></tr>
  <tr><th>Site Contact(s)</th><td>${esc(j.contact)}</td><th>Type of Work</th><td>${esc(j.type)}</td></tr>
@@ -726,7 +800,8 @@ async function generatePdfBlob(no){
  let pageW=pdf.internal.pageSize.getWidth(),pageH=pdf.internal.pageSize.getHeight();
  let imgW=pageW,imgH=canvas.height*imgW/canvas.width;
  let img=canvas.toDataURL('image/jpeg',0.92);
- if(imgH<=pageH){pdf.addImage(img,'JPEG',0,0,imgW,imgH)}
+ const sheetBox=sheet.getBoundingClientRect(),textLines=collectSheetText(sheet);
+ if(imgH<=pageH){drawPdfText(pdf,textLines,{k:imgW/sheetBox.width,maxYmm:imgH,maxXmm:imgW});pdf.addImage(img,'JPEG',0,0,imgW,imgH)}
  else{ // split across pages
   let y=0,remaining=canvas.height,pageCanvasH=canvas.width*pageH/imgW;
   while(remaining>0){
@@ -736,6 +811,7 @@ async function generatePdfBlob(no){
    sliceCanvas.getContext('2d').drawImage(canvas,0,y,canvas.width,sliceH,0,0,canvas.width,sliceH);
    let sliceImg=sliceCanvas.toDataURL('image/jpeg',0.92);
    if(y>0)pdf.addPage();
+   drawPdfText(pdf,textLines,{k:imgW/sheetBox.width,yOffsetCss:y*sheetBox.width/canvas.width,maxYmm:sliceH*imgW/canvas.width,maxXmm:imgW});
    pdf.addImage(sliceImg,'JPEG',0,0,imgW,sliceH*imgW/canvas.width);
    y+=sliceH;remaining-=sliceH;
   }
@@ -778,9 +854,10 @@ function computeEngineerWeekTotals(engName,startStr,endStr){
  jobs.forEach(j=>{
   (j.time||[]).forEach(r=>{
    if(!r.date||r.date<startStr||r.date>endStr)return;
-   let eng=(r.eid||'').trim()||(j.engineers&&j.engineers[0])||'Unassigned';
-   if(!engineerNamesMatch(eng,engName))return;
-   t.nt+=(+r.nt||0);t.ot+=(+r.ot||0);t.dt+=(+r.dt||0);t.mile+=(+r.mile||0);
+   const names=rowEngineers(j,r);
+   if(!names.some(n=>engineerNamesMatch(n,engName)))return;
+   t.nt+=(+r.nt||0);t.ot+=(+r.ot||0);t.dt+=(+r.dt||0);
+   t.mile+=(+r.mile||0);
    if(j.callout)t.callouts.add(j.job);
   });
  });
@@ -805,8 +882,7 @@ function weeklyHoursSummaryHtml(engName,startStr,endStr){
 function jobsForEngineerWeek(engName,startStr,endStr){
  let matched=jobs.filter(j=>(j.time||[]).some(r=>{
   if(!r.date||r.date<startStr||r.date>endStr)return false;
-  let eng=(r.eid||'').trim()||(j.engineers&&j.engineers[0])||'Unassigned';
-  return engineerNamesMatch(eng,engName);
+  return rowEngineers(j,r).some(n=>engineerNamesMatch(n,engName));
  }));
  matched.sort((a,b)=>(a.date||'').localeCompare(b.date||''));
  return matched;
@@ -847,6 +923,8 @@ async function downloadWeeklyJobSheetsPdf(){
    let imgW=pageW,imgH=canvas.height*imgW/canvas.width;
    let img=canvas.toDataURL('image/jpeg',0.92);
    if(pageCount>0)pdf.addPage();
+   const drawW=imgH<=pageH?imgW:imgW*(pageH/imgH),drawH=imgH<=pageH?imgH:pageH;
+   drawPdfText(pdf,collectSheetText(sheet),{k:drawW/sheet.getBoundingClientRect().width,maxYmm:drawH,maxXmm:drawW});
    if(imgH<=pageH){pdf.addImage(img,'JPEG',0,0,imgW,imgH)}
    else{let scale=pageH/imgH;pdf.addImage(img,'JPEG',0,0,imgW*scale,pageH)}
    pageCount++;
@@ -916,7 +994,11 @@ async function emailJob(no){
  try{
   let result=await generatePdfBlob(no);
   let subject='Job Sheet '+j.job+' - '+j.customer;
-  let bodyText='Job Sheet '+j.job+'\nCustomer: '+j.customer+'\nSite: '+j.site+'\nDate: '+ukDate(j.date);
+  const bodyShort='Job Sheet '+j.job+'\nCustomer: '+j.customer+'\nSite: '+j.site+'\nDate: '+ukDate(j.date);
+  const clipTxt=(t,n)=>{t=String(t||'').trim();return t.length>n?t.slice(0,n)+'…':t};
+  let bodyText=bodyShort;
+  if(j.comments&&j.comments.trim())bodyText+='\n\nReport of work carried out:\n'+clipTxt(j.comments,1500);
+  if(j.defects&&j.defects.trim())bodyText+='\n\nRepairs required:\n'+clipTxt(j.defects,1000);
   if(result){
    let file=new File([result.blob],result.filename,{type:'application/pdf'});
    if(navigator.canShare&&navigator.canShare({files:[file]})){
@@ -928,7 +1010,7 @@ async function emailJob(no){
   }
   // Fallback: no file-sharing support, or the PDF failed to generate — open a plain
   // email with no attachment rather than leaving the person with nothing at all.
-  let fallbackBody=bodyText+(result?'\n\nPlease attach the PDF generated using Download PDF.':'');
+  let fallbackBody=bodyShort+(result?'\n\nPlease attach the PDF generated using Download PDF.':'');
   let mailtoUrl='mailto:'+(j.email||'')+'?subject='+encodeURIComponent(subject)+'&body='+encodeURIComponent(fallbackBody);
   let a=document.createElement('a');a.href=mailtoUrl;a.style.display='none';
   document.body.appendChild(a);a.click();
@@ -1070,13 +1152,14 @@ function showTodayJobs(){resetJobFilters();window._jobFilterToday=true;renderJob
 
 /* ---------------- backup / restore / merge ---------------- */
 const BACKUP_KEY='rkey_last_backup',PRE_IMPORT_KEY='rkey_pre_import';
-function backupPayload(){return{version:3,exportedAt:new Date().toISOString(),jobs,customers,engineers,customerRecords,deletedCustomers}}
+function backupPayload(){return{version:3,exportedAt:new Date().toISOString(),jobs,customers,engineers,customerRecords,deletedCustomers,quotes}}
 function persistAll(){
  localStorage.setItem('rkey_jobs',JSON.stringify(jobs));
  localStorage.setItem('rkey_customers',JSON.stringify(customers));
  localStorage.setItem('rkey_engineers',JSON.stringify(engineers));
  localStorage.setItem('rkey_customer_records',JSON.stringify(customerRecords));
  localStorage.setItem('rkey_deleted_customers',JSON.stringify(deletedCustomers));
+ saveQuotes();
 }
 function cleanCustomerRecords(o){
  const out={};if(!o||typeof o!=='object')return out;
@@ -1111,7 +1194,7 @@ function askImportMode(info){
  });
 }
 function jobSig(j){ // what "the same job" means for merge purposes (signature images compared by length only)
- return JSON.stringify([j.job,j.order,j.customer,j.site,j.contact,j.email,j.equipment,j.model,j.serial,j.date,j.status,j.type,j.engineers,j.comments,j.defects,j.repairStatus,j.time,j.materials,j.customerName,j.customerPosition,j.callout,(j.customerSig||'').length,(j.engineerSig||'').length]);
+ return JSON.stringify([j.job,j.order,j.customer,j.site,j.contact,j.email,j.equipment,j.model,j.serial,j.date,j.status,j.type,j.engineers,j.comments,j.defects,j.repairStatus,j.time,j.materials,j.materialCosts,j.quote,j.customerName,j.customerPosition,j.callout,(j.customerSig||'').length,(j.engineerSig||'').length]);
 }
 function applyReplace(d,incoming){
  jobs=incoming;
@@ -1119,6 +1202,7 @@ function applyReplace(d,incoming){
  if(Array.isArray(d.engineers)&&d.engineers.length)engineers=d.engineers.map(String);
  customerRecords=cleanCustomerRecords(d.customerRecords);
  deletedCustomers=Array.isArray(d.deletedCustomers)?d.deletedCustomers.map(String):[];
+ if(Array.isArray(d.quotes))quotes=d.quotes.filter(x=>x&&typeof x==='object').map(normQuote).filter(q=>q.number);
  return 'Backup restored: '+jobs.length+' jobs.\n\nNot what you wanted? Tap "Undo last import" on the Jobs page.';
 }
 function applyMerge(d,incoming){
@@ -1129,13 +1213,14 @@ function applyMerge(d,incoming){
   const k=key(inc);
   if(!at.has(k)){jobs.push(inc);at.set(k,jobs.length-1);addedJobs.push(inc);added++;return}
   const cur=jobs[at.get(k)];
-  if(jobSig(cur)===jobSig(inc)){same++;return}
-  if((inc.updatedAt||'')>(cur.updatedAt||'')){jobs[at.get(k)]=inc;updated++}else keptLocal++;
+  if(jobSig(cur)===jobSig(inc)){if(!hasInvoiceData(cur)&&hasInvoiceData(inc))cur.invoice=inc.invoice;same++;return}
+  if((inc.updatedAt||'')>(cur.updatedAt||'')){if(hasInvoiceData(cur)&&!hasInvoiceData(inc))inc.invoice=cur.invoice;jobs[at.get(k)]=inc;updated++}else keptLocal++;
  });
  const seen=new Set(customers.map(c=>c.trim().toLowerCase()));
  (Array.isArray(d.customers)?d.customers:[]).forEach(c=>{c=String(c);const k=c.trim().toLowerCase();if(k&&!seen.has(k)&&!deletedCustomers.includes(k)){customers.push(c);seen.add(k)}});
  const es=new Set(engineers.map(e=>e.trim().toLowerCase()));
  (Array.isArray(d.engineers)?d.engineers:[]).forEach(e=>{e=String(e).trim();if(e&&!es.has(e.toLowerCase())){engineers.push(e);es.add(e.toLowerCase())}});
+ if(Array.isArray(d.quotes))d.quotes.filter(x=>x&&typeof x==='object').map(normQuote).filter(q=>q.number).forEach(iq=>{const cur=findQuote(iq.number);if(!cur)quotes.push(iq);else if((iq.updatedAt||'')>(cur.updatedAt||''))quotes[quotes.indexOf(cur)]=iq});
  const cr=cleanCustomerRecords(d.customerRecords);
  Object.keys(cr).forEach(k=>{if(!customerRecords[k])customerRecords[k]=cr[k];else if(!customerRecords[k].postcode&&cr[k].postcode)customerRecords[k].postcode=cr[k].postcode});
  const counts={};jobs.forEach(j=>{counts[j.job]=(counts[j.job]||0)+1});
@@ -1150,6 +1235,7 @@ function revertFromSnapshot(){
  const d=JSON.parse(raw);
  jobs=(d.jobs||[]).map(normalizeJob);customers=d.customers||[];engineers=d.engineers||[];
  customerRecords=cleanCustomerRecords(d.customerRecords);deletedCustomers=d.deletedCustomers||[];
+ quotes=(Array.isArray(d.quotes)?d.quotes:[]).filter(x=>x&&typeof x==='object').map(normQuote).filter(q=>q.number);
  persistAll();try{localStorage.removeItem(PRE_IMPORT_KEY)}catch(e){}
  return true;
 }
@@ -1158,7 +1244,7 @@ function undoImport(){
  try{if(!revertFromSnapshot()){alert('There is nothing to undo.');return}}catch(e){alert('Could not undo: '+e.message);return}
  setupLists();home();alert('Import undone.');
 }
-function importBackup(){
+function importBackup(opts){
  const input=document.createElement('input');input.type='file';input.accept='.json,application/json';
  input.onchange=()=>{
   const f=input.files&&input.files[0];if(!f)return;
@@ -1174,7 +1260,7 @@ function importBackup(){
    try{localStorage.setItem(PRE_IMPORT_KEY,JSON.stringify(backupPayload()));hadSnapshot=true}catch(e){/* storage too full for an undo copy — carry on */}
    try{
     const summary=mode==='replace'?applyReplace(d,incoming):applyMerge(d,incoming);
-    persistAll();setupLists();home();alert(summary);
+    persistAll();setupLists();if(opts&&opts.invoices)invoicesPage();else home();alert(summary);
    }catch(e){
     let restored=false;try{restored=hadSnapshot&&revertFromSnapshot()}catch(e2){}
     setupLists();home();
@@ -1290,7 +1376,7 @@ function repairPageBreaks(boundaries,totalH,pageH){
  }
  return cuts;
 }
-function addCanvasPages(pdf,canvas,boundariesCss,cssWidth){
+function addCanvasPages(pdf,canvas,boundariesCss,cssWidth,textLines){
  const pageW=pdf.internal.pageSize.getWidth(),pageH=pdf.internal.pageSize.getHeight();
  const k=canvas.width/cssWidth; // canvas px per CSS px
  const pagePx=Math.floor(canvas.width*pageH/pageW);
@@ -1302,6 +1388,7 @@ function addCanvasPages(pdf,canvas,boundariesCss,cssWidth){
   const ctx=slice.getContext('2d');ctx.fillStyle='#fff';ctx.fillRect(0,0,slice.width,sh);
   ctx.drawImage(canvas,0,sy,canvas.width,sh,0,0,canvas.width,sh);
   if(p>0)pdf.addPage();
+  drawPdfText(pdf,textLines,{k:pageW/cssWidth,yOffsetCss:sy/k,maxYmm:sh*pageW/canvas.width,maxXmm:pageW});
   pdf.addImage(slice.toDataURL('image/jpeg',0.92),'JPEG',0,0,pageW,sh*pageW/canvas.width);
  }
 }
@@ -1322,7 +1409,7 @@ async function exportRepairsPdf(mode){
   const bounds=[...sheet.querySelectorAll('.repgroup,.repitem')].filter(el=>!(el.classList.contains('repitem')&&el.previousElementSibling&&el.previousElementSibling.tagName==='H4')).map(el=>el.getBoundingClientRect().top-top);
   const canvas=await html2canvas(sheet,{scale:2,useCORS:true,backgroundColor:'#ffffff'});
   const {jsPDF}=window.jspdf;const pdf=new jsPDF('p','mm','a4');
-  addCanvasPages(pdf,canvas,bounds,sheet.getBoundingClientRect().width);
+  addCanvasPages(pdf,canvas,bounds,sheet.getBoundingClientRect().width,collectSheetText(sheet));
   const name=(sel.scope==='all'?'Outstanding Repairs - '+ukDate(localDateStr()):'Repairs Required - Week starting '+ukDate(sel.s))+'.pdf';
   const blob=pdf.output('blob'),file=new File([blob],name,{type:'application/pdf'});
   if(mode==='share'&&navigator.canShare&&navigator.canShare({files:[file]})){await navigator.share({files:[file],title:name,text:title})}
@@ -1330,6 +1417,611 @@ async function exportRepairsPdf(mode){
  }catch(e){if(!(e&&e.name==='AbortError'))alert('Could not create the PDF: '+e.message)}
  finally{if(off)off.remove();if(btn){btn.disabled=false;btn.textContent=orig}}
 }
+/* ---------------- invoices ---------------- */
+const RATES_KEY='rkey_rates';
+const DEFAULT_RATES={nt:null,ot:null,dt:null,mile:null,callout:null,vat:null}; // no prices are kept in this file: each device keeps its own rates (Invoices > Rates)
+function loadRates(){
+ const keys=['nt','ot','dt','mile','callout','vat'];
+ let raw=null;try{raw=localStorage.getItem(RATES_KEY)}catch(e){}
+ if(raw===null)return Object.assign({},DEFAULT_RATES); // never saved on this device: nothing set yet
+ try{
+  const r=JSON.parse(raw);if(!r||typeof r!=='object')return Object.assign({},DEFAULT_RATES);
+  const out={};keys.forEach(k=>{const v=r[k];out[k]=(typeof v==='number'&&isFinite(v)&&v>=0)?v:null});return out; // anything cleared on purpose stays cleared
+ }catch(e){return Object.assign({},DEFAULT_RATES)}
+}
+let rates=loadRates();
+const pence=n=>Math.round(Number((Number(n)||0).toPrecision(12))*100);
+const roundP=x=>Math.round(Number(x.toPrecision(12))); // strips float noise so 787.4999999 / 787.5000001 both mean half-a-penny
+function gbp(p){return '£'+(p/100).toLocaleString('en-GB',{minimumFractionDigits:2,maximumFractionDigits:2})}
+function hasInvoiceData(j){const v=j&&j.invoice;return !!(v&&typeof v==='object'&&(v.status==='invoiced'||(v.materials!==''&&v.materials!=null&&isFinite(Number(v.materials)))||String(v.note||'').trim()))}
+function normInvoice(v){
+ v=v&&typeof v==='object'?v:{};
+ const m=(v.materials===''||v.materials==null)?'':Number(v.materials);
+ const sn=v.snapshot&&typeof v.snapshot==='object'?{net:Math.round(+v.snapshot.net)||0,vat:Math.round(+v.snapshot.vat)||0,gross:Math.round(+v.snapshot.gross)||0}:null;
+ return{materials:(m===''||!isFinite(m)||m<0)?'':Math.round(m*100)/100,note:String(v.note||'').slice(0,200),status:v.status==='invoiced'?'invoiced':'',invoicedOn:/^\d{4}-\d{2}-\d{2}$/.test(v.invoicedOn||'')?v.invoicedOn:'',snapshot:sn};
+}
+function costOrBlank(v){if(v===''||v==null)return '';const n=Number(v);return(isFinite(n)&&n>=0)?Math.round(n*100)/100:''}
+function normCosts(c,len){const out=[];for(let i=0;i<len;i++)out.push(Array.isArray(c)?costOrBlank(c[i]):'');return out}
+function cleanCosts(c,len){const o=normCosts(c,len);return o.some(x=>x!=='')?o:undefined}
+function materialsInfo(j){
+ // What was used, and what each item costs (costs are for the invoice only — they are never printed on the job sheet).
+ const items=[];(j.materials||[]).forEach((d,i)=>{if(String(d).trim())items.push({desc:String(d),cost:costOrBlank((j.materialCosts||[])[i])})});
+ const costed=items.filter(x=>x.cost!=='');
+ return{items,costedCount:costed.length,allCosted:items.length>0&&costed.length===items.length,sumP:costed.reduce((a,x)=>a+pence(x.cost),0)};
+}
+function lastWorked(j){let d=j.date||'';(j.time||[]).forEach(r=>{if(r.date&&r.date>d)d=r.date});return d}
+function uniqueEngineers(list){const out=[];(list||[]).forEach(n=>{n=String(n||'').trim();if(n&&!out.some(m=>engineerNamesMatch(m,n)))out.push(n)});return out}
+function rowEngineers(j,r){
+ // Who a time row belongs to: the engineer named on that row, otherwise EVERY engineer on the job (the same person typed twice counts once).
+ const e=String((r&&r.eid)||'').trim();if(e)return[e];
+ const l=uniqueEngineers(j.engineers);return l.length?l:['Unassigned'];
+}
+function hrsNote(raw,man,unit){
+ if(!(raw>0)||man===raw)return '';
+ unit=unit||'h';const k=man/raw;
+ return Math.abs(k-Math.round(k))<1e-9?' ('+String(Math.round(raw*100)/100)+' '+unit+' × '+Math.round(k)+' engineers)':' (engineer-'+(unit==='h'?'hours':'miles')+')';
+}
+function jobCrew(j){return Math.max(1,uniqueEngineers([].concat(j.engineers||[],(j.time||[]).map(t=>t.eid))).length)}
+function jobCost(j,r){
+ // T = hours and miles as typed on the sheet; M = what is charged: each row x the engineers it applies to (2, 3 or 4 men = x2, x3, x4).
+ // Every engineer has their own van, so mileage is charged per engineer, and the call-out fee per engineer in attendance.
+ const T={nt:0,ot:0,dt:0,mile:0},M={nt:0,ot:0,dt:0,mile:0};let crew=1;
+ (j.time||[]).forEach(t=>{
+  const k=rowEngineers(j,t).length,nt=+t.nt||0,ot=+t.ot||0,dt=+t.dt||0;
+  T.nt+=nt;T.ot+=ot;T.dt+=dt;T.mile+=+t.mile||0;
+  M.nt+=nt*k;M.ot+=ot*k;M.dt+=dt*k;M.mile+=(+t.mile||0)*k;
+  if((nt>0||ot>0||dt>0)&&k>crew)crew=k;
+ });
+ [T,M].forEach(o=>Object.keys(o).forEach(x=>{o[x]=Math.round(o[x]*100)/100}));
+ const inv=normInvoice(j.invoice),problems=[];
+ const part=(qty,rate,label)=>{if(!(qty>0))return 0;if(rate==null){problems.push('No '+label+' rate set');return 0}return roundP(qty*rate*100)};
+ const ntP=part(M.nt,r.nt,'normal-time'),otP=part(M.ot,r.ot,'overtime 1'),dtP=part(M.dt,r.dt,'overtime 2'),mileP=part(M.mile,r.mile,'mileage');
+ const callCrew=jobCrew(j);
+ if(j.callout&&r.callout==null)problems.push('No call-out rate set');
+ const callP=(j.callout&&r.callout!=null)?pence(r.callout)*callCrew:0;
+ const mi=materialsInfo(j);let matP=null,matMode='';
+ if(inv.materials!==''){matP=pence(inv.materials);matMode='manual'}
+ else if(mi.allCosted){matP=mi.sumP;matMode='sheet'}
+ if(mi.items.length&&matP===null)problems.push(mi.costedCount>0?'Materials: '+(mi.items.length-mi.costedCount)+' of '+mi.items.length+' still need a cost (or enter a total)':'Materials are listed — enter their cost (0 if nothing to charge)');
+ if(r.vat==null)problems.push('VAT rate not set');
+ const net=ntP+otP+dtP+mileP+callP+(matP||0);
+ if(!(T.nt>0||T.ot>0||T.dt>0||T.mile>0||callP>0||(matP||0)>0))problems.push('Nothing to charge — no hours, mileage or materials');
+ const vatP=r.vat==null?0:roundP(net*r.vat/100);
+ return{T,M,crew,callCrew,ntP,otP,dtP,mileP,callP,matP,matMode,net,vatP,grossP:net+vatP,problems,ready:problems.length===0};
+}
+function invoiceSelection(){
+ const scope=document.getElementById('invScope').value;
+ const{start,end}=hoursWeekRange(document.getElementById('invWeekPick').value||localDateStr());
+ const s=localDateStr(start),e=localDateStr(end);
+ // A job is invoiced ONCE, in the week it was last worked, with ALL of its hours — so a job that
+ // runs across two weeks can never be billed twice. Jobs with no worked date (the old job book) never qualify.
+ const todo=[],done=[],incomplete=[],held=[];
+ jobs.forEach(j=>{
+  const d=lastWorked(j);if(!d)return;
+  if(scope==='week'&&!(d>=s&&d<=e))return;
+  if(quoteOf(j)){held.push(j);return} // part of a quote: invoiced from the quote, never separately
+  if(j.status!=='Complete'){if(scope==='week')incomplete.push(j);return}
+  (normInvoice(j.invoice).status==='invoiced'?done:todo).push(j);
+ });
+ const by=(a,b)=>(a.customer||'').toLowerCase().localeCompare((b.customer||'').toLowerCase())||lastWorked(a).localeCompare(lastWorked(b))||(a.job||'').localeCompare(b.job||'');
+ todo.sort(by);done.sort(by);incomplete.sort(by);
+ return{scope,s,e,todo,done,incomplete,held};
+}
+function invoicesPage(){
+ hide();document.getElementById('invoices').classList.remove('hidden');
+ const pick=document.getElementById('invWeekPick');
+ if(!pick.value){ // land on the latest week that still has completed work waiting, so the button always shows something useful
+  let latest='';jobs.forEach(j=>{if(j.status==='Complete'&&normInvoice(j.invoice).status!=='invoiced'&&!quoteOf(j)){const d=lastWorked(j);if(d>latest)latest=d}});
+  pick.value=localDateStr(hoursWeekRange(latest||localDateStr()).start);
+ }
+ fillRatesForm();renderInvoices();
+}
+function shiftInvWeek(days){
+ const pick=document.getElementById('invWeekPick');
+ const cur=hoursWeekRange(pick.value||localDateStr()).start;cur.setDate(cur.getDate()+days);
+ pick.value=localDateStr(cur);renderInvoices();
+}
+function fillRatesForm(){
+ ['nt','ot','dt','mile','callout','vat'].forEach(k=>{document.getElementById('rate_'+k).value=rates[k]==null?'':rates[k]});
+ document.getElementById('invRatesBox').open=['nt','ot','dt','mile','vat'].some(k=>rates[k]==null);
+ updateRatesState();
+}
+function updateRatesState(){document.getElementById('invRatesState').textContent=['nt','ot','dt','mile','vat'].some(k=>rates[k]==null)?'— not all set yet':'— set'}
+function saveRates(){
+ const next={};let bad=false;
+ ['nt','ot','dt','mile','callout','vat'].forEach(k=>{
+  const raw=document.getElementById('rate_'+k).value.trim();
+  if(raw===''){next[k]=null;return}
+  const v=Number(raw);if(!isFinite(v)||v<0||(k==='vat'&&v>100)){bad=true;return}
+  next[k]=v;
+ });
+ if(bad){alert('One of the rates is not a valid amount — please check them.');return}
+ try{localStorage.setItem(RATES_KEY,JSON.stringify(next))}catch(e){alert('Could not save the rates on this device.');return}
+ rates=next;updateRatesState();renderInvoices();
+}
+function renderInvNotices(){
+ const miss=[['nt','normal-time'],['ot','overtime 1'],['dt','overtime 2'],['mile','mileage']].filter(x=>rates[x[0]]==null).map(x=>x[1]);
+ if(rates.vat==null)miss.push('VAT');
+ document.getElementById('invNotices').innerHTML=miss.length?'<div class="notice warn">Rates not set yet: <b>'+miss.join(', ')+'</b>. Open <b>Rates</b> below and enter them (0 for anything you do not charge). A job cannot be marked ready until the rates it needs are in.</div>':'';
+}
+function renderInvEngCheck(sel){
+ const el=document.getElementById('invEngCheck');
+ if(sel.scope!=='week'){el.innerHTML='';return}
+ // Only people who worked in the previous 4 weeks are checked, so leavers and old typos in the engineers list never nag.
+ const base=new Date(sel.s+'T00:00:00'),quiet=[];
+ engineers.forEach(n=>{
+  if(!n||jobsForEngineerWeek(n,sel.s,sel.e).length)return;
+  for(let w=1;w<=4;w++){
+   const a=new Date(base);a.setDate(a.getDate()-7*w);const b=new Date(a);b.setDate(b.getDate()+6);
+   if(jobsForEngineerWeek(n,localDateStr(a),localDateStr(b)).length){quiet.push(n);return}
+  }
+ });
+ el.innerHTML=quiet.length?'<div class="notice warn">Worked in the last 4 weeks but nothing recorded for this week: <b>'+quiet.map(esc).join(', ')+'</b>. If they worked, ask for their backup and tap <b>⬆ Add engineers\' jobs</b>.</div>':'';
+}
+function invGroups(items){
+ const groups=[],by={};
+ items.forEach((j,idx)=>{const k=(j.customer||'Unknown').trim().toLowerCase();if(!by[k]){by[k]={name:j.customer||'Unknown',rows:[],id:'g'+groups.length};groups.push(by[k])}by[k].rows.push({j,idx})});
+ return groups;
+}
+function invCalcHtml(j,idx){
+ const c=jobCost(j,rates),inv=normInvoice(j.invoice);
+ const h=x=>String(Math.round(x*100)/100);
+ const L=(label,detail,p)=>'<div class="invline"><span class="k">'+label+(detail?' <span class="muted">'+detail+'</span>':'')+'</span><span class="v">'+gbp(p)+'</span></div>';
+ const rt=(k,unit)=>rates[k]!=null?' × '+gbp(pence(rates[k]))+unit:'';
+ let lines='';
+ if(c.M.nt>0)lines+=L('Normal time',h(c.M.nt)+' h'+hrsNote(c.T.nt,c.M.nt)+rt('nt','/h'),c.ntP);
+ if(c.M.ot>0)lines+=L('Overtime 1',h(c.M.ot)+' h'+hrsNote(c.T.ot,c.M.ot)+rt('ot','/h'),c.otP);
+ if(c.M.dt>0)lines+=L('Overtime 2',h(c.M.dt)+' h'+hrsNote(c.T.dt,c.M.dt)+rt('dt','/h'),c.dtP);
+ if(c.M.mile>0)lines+=L('Mileage',h(c.M.mile)+' mi'+hrsNote(c.T.mile,c.M.mile,'mi')+rt('mile','/mi'),c.mileP);
+ if(c.callP>0)lines+=L('Call-out fee',(rates.callout!=null?gbp(pence(rates.callout)):'')+' × '+c.callCrew+' engineer'+(c.callCrew===1?'':'s'),c.callP);
+ if(c.matP!==null)lines+=L('Materials',c.matMode==='sheet'?'(costs from the job sheet)':esc(inv.note),c.matP);
+ const totals='<div class="invtotal"><span>Net</span><span>'+gbp(c.net)+'</span></div><div class="invline"><span class="k">VAT'+(rates.vat!=null?' '+rates.vat+'%':'')+'</span><span class="v">'+gbp(c.vatP)+'</span></div><div class="invline"><b>Total</b><b>'+gbp(c.grossP)+'</b></div>';
+ const status=c.ready?'<div class="notice ok">✔ Ready to invoice</div>':'<div class="notice warn">'+c.problems.map(esc).join('<br>')+'</div>';
+ const btns='<div class="actions" style="margin-top:8px"><button class="primary" '+(c.ready?'':'disabled')+' onclick="markInvoiced('+idx+')">Mark as invoiced</button><button onclick="openInvoiceJob('+idx+')">Open job</button></div>';
+ return lines+totals+status+btns;
+}
+function invCardHtml(j,idx){
+ const inv=normInvoice(j.invoice),mi=materialsInfo(j);
+ const dates=[...new Set([j.date].concat((j.time||[]).map(t=>t.date)).filter(Boolean))].sort();
+ const when=dates.length>1?ukDate(dates[0])+' – '+ukDate(dates[dates.length-1]):ukDate(dates[0]||'');
+ const meta=['Job '+j.job,j.order?'PO '+j.order:'',j.quote?'Quote '+j.quote:'',when,j.site,(j.engineers||[]).join(', '),j.callout?'CALL-OUT':''].filter(Boolean).map(esc).join(' · ');
+ const matList=mi.items.map(x=>esc(x.desc)+' — '+(x.cost!==''?gbp(pence(x.cost)):'<i>no cost</i>')).join('<br>');
+ const ph=mi.allCosted?(mi.sumP/100).toFixed(2)+' from sheet':'0.00';
+ return '<div class="invcard" id="invc-'+idx+'"><div class="meta">'+meta+'</div><div class="invmat">'
+  +(mi.items.length?'<div class="muted" style="margin-bottom:6px"><b>Materials used:</b><br>'+matList+'</div>':'<div class="muted" style="margin-bottom:6px">No materials listed on the job sheet.</div>')
+  +'<div class="row"><label style="margin:0">Materials cost £</label><input id="invm-'+idx+'" type="number" min="0" step="0.01" inputmode="decimal" value="'+(inv.materials===''?'':inv.materials)+'" placeholder="'+ph+'" onchange="onInvoiceInput('+idx+')" style="width:140px"><input id="invn-'+idx+'" value="'+esc(inv.note)+'" placeholder="Supplier / note (optional)" onchange="onInvoiceInput('+idx+')" style="flex:1;min-width:140px"></div></div>'
+  +'<div id="invcalc-'+idx+'">'+invCalcHtml(j,idx)+'</div></div>';
+}
+function renderInvoices(){
+ const sel=invoiceSelection();window._invSel=sel;window._invItems=sel.todo;window._invDone=sel.done;
+ document.getElementById('invWeekPick').value=sel.s;
+ document.getElementById('invWeekCtl').style.display=sel.scope==='all'?'none':'inline-flex';
+ renderInvNotices();renderInvEngCheck(sel);
+ const groups=invGroups(sel.todo);window._invGroups=groups;
+ document.getElementById('invBody').innerHTML=sel.todo.length
+  ?groups.map(g=>'<div class="repgroup"><h4>'+esc(g.name)+' <span class="muted">('+g.rows.length+')</span> <span class="muted" id="invg-'+g.id+'" style="float:right;font-weight:400"></span></h4>'+g.rows.map(r=>invCardHtml(r.j,r.idx)).join('')+'</div>').join('')
+  :'<p class="muted">'+(sel.scope==='all'?'Nothing is waiting to be invoiced.':'No completed job sheets for this week are waiting to be invoiced.')+'</p>';
+ const ex=[];
+ if(sel.scope==='week'&&sel.done.length)ex.push('<details class="invmat"><summary><b>Already invoiced ('+sel.done.length+')</b></summary>'+sel.done.map((j,i)=>{const v=normInvoice(j.invoice);return '<div class="invline" style="padding:6px 0;border-top:1px solid #e3e8ec;align-items:center"><span class="k">Job '+esc(j.job)+' — '+esc(j.customer)+' <span class="muted">· invoiced '+esc(ukDate(v.invoicedOn))+(v.snapshot?' · '+gbp(v.snapshot.gross)+' inc VAT':'')+'</span></span><button onclick="undoInvoiced('+i+')">Undo</button></div>'}).join('')+'</details>');
+ if(sel.incomplete.length)ex.push('<details class="invmat"><summary><b>Not complete — left out ('+sel.incomplete.length+')</b></summary>'+sel.incomplete.map(j=>'<div class="invline" style="padding:6px 0;border-top:1px solid #e3e8ec"><span class="k">Job '+esc(j.job)+' — '+esc(j.customer)+'</span><span class="muted">'+esc(j.status)+'</span></div>').join('')+'<div class="muted" style="font-size:12px;margin-top:6px">Set the job to Complete (Edit) and it will appear here.</div></details>');
+ if(sel.held.length)ex.push('<details class="invmat"><summary><b>Part of a quote — invoiced from the quote ('+sel.held.length+')</b></summary>'+sel.held.map(j=>'<div class="invline" style="padding:6px 0;border-top:1px solid #e3e8ec"><span class="k">Job '+esc(j.job)+' — '+esc(j.customer)+'</span><span class="muted">Quote '+esc(j.quote)+'</span></div>').join('')+'</details>');
+ document.getElementById('invExtra').innerHTML=ex.join('');
+ updateInvoiceSummary();
+}
+function updateInvoiceSummary(){
+ const items=window._invItems||[],costs=items.map(j=>jobCost(j,rates));
+ let ready=0,net=0,vat=0,gross=0;
+ costs.forEach(c=>{if(c.ready){ready++;net+=c.net;vat+=c.vatP;gross+=c.grossP}});
+ (window._invGroups||[]).forEach(g=>{
+  let gg=0,any=false;g.rows.forEach(r=>{const c=costs[r.idx];if(c.ready){gg+=c.grossP;any=true}});
+  const el=document.getElementById('invg-'+g.id);if(el)el.textContent=any?gbp(gg)+' inc VAT':'';
+ });
+ document.getElementById('invSummary').textContent=items.length?ready+' of '+items.length+' job'+(items.length===1?'':'s')+' ready to invoice'+(ready?' — net '+gbp(net)+' · VAT '+gbp(vat)+' · total '+gbp(gross):''):'';
+ document.getElementById('invBulk').innerHTML=ready?'<div class="actions no-print" style="margin:10px 0"><button class="primary" onclick="markAllInvoiced()">✔ Mark all '+ready+' ready job'+(ready===1?'':'s')+' as invoiced</button></div>':'';
+}
+function onInvoiceInput(idx){
+ // Updates only this job's figures in place (not the whole list), so tapping from one materials box
+ // straight into the next never loses focus or dismisses the keyboard.
+ const j=(window._invItems||[])[idx];if(!j)return;
+ const m=document.getElementById('invm-'+idx),n=document.getElementById('invn-'+idx);
+ const raw=m.value.trim();let val='';
+ if(raw!==''){const v=Number(raw);if(!isFinite(v)||v<0){alert('Please enter the materials cost as an amount, e.g. 125.50');m.value=normInvoice(j.invoice).materials;return}val=Math.round(v*100)/100}
+ j.invoice=Object.assign({},normInvoice(j.invoice),{materials:val,note:n.value.trim().slice(0,200)});
+ j.updatedAt=new Date().toISOString();saveJobsQuiet();
+ document.getElementById('invcalc-'+idx).innerHTML=invCalcHtml(j,idx);
+ updateInvoiceSummary();
+}
+function stampInvoiced(j,c,today,stamp){
+ j.invoice=Object.assign({},normInvoice(j.invoice),{status:'invoiced',invoicedOn:today,snapshot:{net:c.net,vat:c.vatP,gross:c.grossP}}); // amounts are frozen: a later rate change can't alter a job already invoiced
+ j.updatedAt=stamp;
+}
+function markInvoiced(idx){
+ const j=(window._invItems||[])[idx];if(!j)return;
+ const c=jobCost(j,rates);if(!c.ready){alert('This job is not ready yet:\n\n'+c.problems.join('\n'));return}
+ stampInvoiced(j,c,localDateStr(),new Date().toISOString());saveJobsQuiet();renderInvoices();
+}
+function markAllInvoiced(){
+ const ready=(window._invItems||[]).map(j=>({j,c:jobCost(j,rates)})).filter(x=>x.c.ready);
+ if(!ready.length)return;
+ const net=ready.reduce((a,x)=>a+x.c.net,0);
+ if(!confirm('Mark '+ready.length+' job'+(ready.length===1?'':'s')+' (net '+gbp(net)+') as invoiced?\n\nDo this once you have raised the invoices. They move to "Already invoiced" and drop off this list — you can undo any of them there.'))return;
+ const today=localDateStr(),stamp=new Date().toISOString();
+ ready.forEach(x=>stampInvoiced(x.j,x.c,today,stamp));saveJobsQuiet();renderInvoices();
+}
+function undoInvoiced(i){
+ const j=(window._invDone||[])[i];if(!j)return;
+ if(!confirm('Put Job '+j.job+' back on the to-invoice list?'))return;
+ j.invoice=Object.assign({},normInvoice(j.invoice),{status:'',invoicedOn:'',snapshot:null});
+ j.updatedAt=new Date().toISOString();saveJobsQuiet();renderInvoices();
+}
+function openInvoiceJob(idx){const j=(window._invItems||[])[idx];if(j)openJob(j.job)}
+
+function csvCell(v){
+ let s=v==null?'':String(v);
+ if(/^[=+\-@\t\r]/.test(s))s="'"+s; // stops a customer name like =HYPERLINK(...) running as a formula in Excel
+ return /[",\n\r]/.test(s)?'"'+s.replace(/"/g,'""')+'"':s;
+}
+function invoiceFileLabel(sel){return sel.scope==='all'?'To invoice - '+ukDate(localDateStr()):'Week starting '+ukDate(sel.s)}
+function readyRows(sel){return sel.todo.map(j=>({j,c:jobCost(j,rates)})).filter(x=>x.c.ready)}
+function exportInvoicesCsv(){
+ const sel=invoiceSelection(),rows=readyRows(sel),skipped=sel.todo.length-rows.length;
+ if(!rows.length){alert('Nothing is ready to export yet — enter the materials costs (and any missing rates) first.');return}
+ const m=p=>(p/100).toFixed(2);
+ const head=['Week starting','Job no','Customer order no','Customer','Site','Last worked','Engineers','Crew size','Normal hrs (charged)','OT1 hrs (charged)','OT2 hrs (charged)','Normal £','OT1 £','OT2 £','Miles (charged)','Mileage £','Call-out £','Materials £','Materials note','Net £','VAT £','Gross £'];
+ const lines=[head.map(csvCell).join(',')];
+ rows.forEach(x=>{const j=x.j,c=x.c;lines.push([ukDate(sel.s),j.job,j.order,j.customer,j.site,ukDate(lastWorked(j)),(j.engineers||[]).join(' + '),c.crew,c.M.nt,c.M.ot,c.M.dt,m(c.ntP),m(c.otP),m(c.dtP),c.M.mile,m(c.mileP),m(c.callP),m(c.matP||0),normInvoice(j.invoice).note,m(c.net),m(c.vatP),m(c.grossP)].map(csvCell).join(','))});
+ const blob=new Blob(['\ufeff'+lines.join('\r\n')],{type:'text/csv;charset=utf-8'});
+ const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='Invoice worksheet - '+invoiceFileLabel(sel)+'.csv';document.body.appendChild(a);a.click();a.remove();
+ setTimeout(()=>URL.revokeObjectURL(a.href),4000);
+ if(skipped)alert(rows.length+' job'+(rows.length===1?'':'s')+' exported. '+skipped+' not included because they are not ready yet.');
+}
+function invoicePdfRow(j,c){
+ const h=x=>String(Math.round(x*100)/100);
+ const hours=[c.M.nt>0?'N/T '+h(c.M.nt)+(c.M.nt!==c.T.nt?' ('+h(c.T.nt)+'×'+Math.round(c.M.nt/c.T.nt)+')':''):'',c.M.ot>0?'O/T '+h(c.M.ot)+(c.M.ot!==c.T.ot?' ('+h(c.T.ot)+'×'+Math.round(c.M.ot/c.T.ot)+')':''):'',c.M.dt>0?'D/T '+h(c.M.dt)+(c.M.dt!==c.T.dt?' ('+h(c.T.dt)+'×'+Math.round(c.M.dt/c.T.dt)+')':''):''].filter(Boolean).join('<br>')||'—';
+ return '<tr><td><b>'+esc(j.job)+'</b>'+(j.order?'<br>PO '+esc(j.order):'')+'</td><td><b>'+esc(j.customer)+'</b><br>'+esc(j.site)+'<br>'+esc(ukDate(lastWorked(j)))+'</td><td>'+hours+'</td><td class="r">'+gbp(c.ntP+c.otP+c.dtP)+'</td><td class="r">'+(c.M.mile>0?h(c.M.mile)+' mi<br>'+gbp(c.mileP):'—')+'</td><td class="r">'+(c.callP?gbp(c.callP):'—')+'</td><td class="r">'+(c.matP==null?'—':gbp(c.matP))+'</td><td class="r">'+gbp(c.net)+'</td><td class="r">'+gbp(c.vatP)+'</td><td class="r"><b>'+gbp(c.grossP)+'</b></td></tr>';
+}
+function invoicePdfPage(title,rowsHtml,foot,notes,pageNo,pageCount,sub){
+ return '<div class="job-sheet" style="background-image:none"><div class="company" style="display:flex;align-items:center;gap:12px"><img src="logo-header.png" alt="" style="height:52px;width:auto;flex-shrink:0"><div style="text-align:left"><strong>KEY ENGINEERING CHESTERFIELD LTD</strong><br>'+esc(sub||'Invoice worksheet — costed from completed job sheets')+'</div></div><div class="title" style="font-size:18px">'+esc(title)+'</div><div style="margin:8px 2px;font-size:12px;display:flex;justify-content:space-between"><span>Prepared '+esc(ukDate(localDateStr()))+'</span><span>Page '+pageNo+' of '+pageCount+'</span></div><table class="invtable"><thead><tr><th>Job / PO</th><th>Customer / site / date</th><th>Hours</th><th class="r">Labour</th><th class="r">Mileage</th><th class="r">Call-out</th><th class="r">Materials</th><th class="r">Net</th><th class="r">VAT</th><th class="r">Total</th></tr></thead><tbody>'+rowsHtml+foot+'</tbody></table>'+notes+'</div>';
+}
+const PDF_CHAR_MAP={'\u25cf':'-','\u2022':'-','\u2014':'-','\u2013':'-','\u2018':"'",'\u2019':"'",'\u201c':'"','\u201d':'"','\u2026':'...','\u00d7':'x','\u2192':'->','\u2190':'<-','\u00a0':' '};
+function pdfSafeText(s){
+ // the PDF's built-in fonts only cover Western characters: swap the fancy ones for plain equivalents, drop the rest
+ return String(s).replace(/[\u00a0\u2013\u2014\u2018\u2019\u201c\u201d\u2022\u2026\u00d7\u2190\u2192\u25cf]/g,c=>PDF_CHAR_MAP[c]).replace(/[^\x20-\x7e\xa1-\xff]/g,'');
+}
+function collectSheetText(root){
+ // Every visible line of text in the sheet, in reading order, with where it sits (CSS px from the sheet's top-left).
+ const out=[];
+ try{
+  const rr=root.getBoundingClientRect();if(!rr.width)return out;
+  const walker=document.createTreeWalker(root,NodeFilter.SHOW_TEXT);
+  let node;
+  while((node=walker.nextNode())){
+   const val=node.nodeValue;if(!val||!val.trim())continue;
+   const el=node.parentElement;if(!el||el.closest('script,style,button,select,option,textarea,input'))continue;
+   const cs=getComputedStyle(el);if(cs.display==='none'||cs.visibility==='hidden')continue;
+   const size=parseFloat(cs.fontSize)||11,range=document.createRange(),rows=[];
+   for(let i=0;i<val.length;i++){
+    range.setStart(node,i);range.setEnd(node,i+1);
+    const rc=range.getClientRects();if(!rc.length||!rc[0].width)continue;
+    const r=rc[0],last=rows[rows.length-1];
+    const row=last&&Math.abs(last.top-r.top)<size*0.6?last:null;
+    if(row){row.s+=val[i];row.left=Math.min(row.left,r.left);row.right=Math.max(row.right,r.right)}
+    else rows.push({top:r.top,left:r.left,right:r.right,height:r.height,s:val[i]});
+   }
+   rows.forEach(r=>{const t=pdfSafeText(r.s).replace(/\s+/g,' ').trim();if(t)out.push({text:t,x:r.left-rr.left,y:r.top-rr.top,w:r.right-r.left,h:r.height,size})});
+  }
+ }catch(e){console.warn('Could not read the sheet text:',e)}
+ return out;
+}
+function drawPdfText(pdf,lines,o){
+ // Puts the page's real text UNDER the picture of the page, in white. The picture is opaque so nothing changes
+ // visually, but PDF viewers still let you select, copy and search it. Any failure just skips the text layer.
+ try{
+  if(!lines||!lines.length||typeof pdf.text!=='function'||typeof pdf.setFontSize!=='function')return;
+  const k=o.k,off=o.yOffsetCss||0;
+  pdf.setTextColor(255,255,255);
+  lines.forEach(l=>{
+   const y=(l.y-off)*k,hmm=l.h*k;
+   if(y<0||y>=o.maxYmm||l.x<0||(l.x+l.w)*k>o.maxXmm+0.5)return; // a line belongs to the page where it STARTS, so one cut by a page break is kept, not lost
+   const size=Math.max(2,l.size*k*72/25.4);
+   pdf.setFontSize(size);
+   if(typeof pdf.getTextWidth==='function'){const have=pdf.getTextWidth(l.text),want=l.w*k;if(have>want&&have>0)pdf.setFontSize(Math.max(2,size*want/have))}
+   pdf.text(l.text,l.x*k,Math.min(y+hmm*0.78,o.maxYmm-0.3)); // keep the baseline on the page; the text is white, so this can never show
+  });
+ }catch(e){console.warn('Text layer skipped:',e)}
+}
+function addFitPage(pdf,canvas,newPage,root){
+ const pw=pdf.internal.pageSize.getWidth(),ph=pdf.internal.pageSize.getHeight();
+ let w=pw,h=canvas.height*pw/canvas.width;
+ if(h>ph){const k=ph/h;w*=k;h=ph}
+ if(newPage)pdf.addPage();
+ if(root){const b=root.getBoundingClientRect();drawPdfText(pdf,collectSheetText(root),{k:w/b.width,maxYmm:h,maxXmm:w})}
+ pdf.addImage(canvas.toDataURL('image/jpeg',0.92),'JPEG',0,0,w,h);
+}
+async function exportInvoicesPdf(mode){
+ const btn=event&&event.target,orig=btn?btn.textContent:'';
+ if(btn){btn.disabled=true;btn.textContent='Generating…'}
+ let off=null;
+ try{
+  const libs=await window.pdfLibsReady;
+  if(!libs||!window.html2canvas||!window.jspdf){alert('Could not load the PDF tools — check your internet connection and try again.');return}
+  const sel=invoiceSelection(),rows=readyRows(sel),skipped=sel.todo.length-rows.length;
+  if(!rows.length){alert('Nothing is ready to export yet — enter the materials costs (and any missing rates) first.');return}
+  const per=9,pages=Math.ceil(rows.length/per);
+  const tot=rows.reduce((a,x)=>({net:a.net+x.c.net,vat:a.vat+x.c.vatP,gross:a.gross+x.c.grossP}),{net:0,vat:0,gross:0});
+  const title='Invoice worksheet — '+invoiceFileLabel(sel);
+  const rateLine='Rates used: normal time '+gbp(pence(rates.nt))+'/h · overtime 1 '+gbp(pence(rates.ot))+'/h · overtime 2 '+gbp(pence(rates.dt))+'/h · mileage '+gbp(pence(rates.mile))+'/mile'+(rates.callout!=null?' · call-out fee '+gbp(pence(rates.callout)):'')+' · VAT '+rates.vat+'%';
+  const skipNote=skipped?'<br><b>'+skipped+' job'+(skipped===1?'':'s')+' not included</b> — not ready yet (materials not costed or a rate missing).':'';
+  off=document.createElement('div');off.style.cssText='position:fixed;left:-99999px;top:0;width:1000px';document.body.appendChild(off);
+  const{jsPDF}=window.jspdf;const pdf=new jsPDF('l','mm','a4');
+  for(let p=0;p<pages;p++){
+   const last=p===pages-1,chunk=rows.slice(p*per,(p+1)*per);
+   const foot=last?'<tr class="tot"><td colspan="7">Total — '+rows.length+' job'+(rows.length===1?'':'s')+'</td><td class="r">'+gbp(tot.net)+'</td><td class="r">'+gbp(tot.vat)+'</td><td class="r">'+gbp(tot.gross)+'</td></tr>':'';
+   const notes=last?'<div style="font-size:11px;margin-top:10px">'+esc(rateLine)+skipNote+'</div>':'';
+   off.innerHTML=invoicePdfPage(title,chunk.map(x=>invoicePdfRow(x.j,x.c)).join(''),foot,notes,p+1,pages);
+   await waitForImages(off);
+   const canvas=await html2canvas(off.firstElementChild,{scale:2,useCORS:true,backgroundColor:'#ffffff'});
+   addFitPage(pdf,canvas,p>0,off.firstElementChild);
+  }
+  const name='Invoice worksheet - '+invoiceFileLabel(sel)+'.pdf',blob=pdf.output('blob'),file=new File([blob],name,{type:'application/pdf'});
+  if(mode==='share'&&navigator.canShare&&navigator.canShare({files:[file]})){await navigator.share({files:[file],title:name,text:title})}
+  else{const url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download=name;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),4000)}
+ }catch(e){if(!(e&&e.name==='AbortError'))alert('Could not create the PDF: '+e.message)}
+ finally{if(off)off.remove();if(btn){btn.disabled=false;btn.textContent=orig}}
+}
+/* ---------------- per-engineer invoice bundles ---------------- */
+function defaultInvoiceWeekStart(){
+ let latest='';jobs.forEach(j=>{if(j.status==='Complete'&&normInvoice(j.invoice).status!=='invoiced'&&!quoteOf(j)){const d=lastWorked(j);if(d>latest)latest=d}});
+ return localDateStr(hoursWeekRange(latest||localDateStr()).start);
+}
+function invoiceJobsForWeek(s,e){return jobs.filter(j=>{const d=lastWorked(j);return d&&d>=s&&d<=e&&j.status==='Complete'&&normInvoice(j.invoice).status!=='invoiced'&&!quoteOf(j)})}
+function jobInvolves(j,name){return (j.engineers||[]).some(n=>engineerNamesMatch(n,name))||(j.time||[]).some(r=>String(r.eid||'').trim()&&engineerNamesMatch(r.eid,name))}
+function engineerInvoiceJobs(name,s,e){return invoiceJobsForWeek(s,e).filter(j=>jobInvolves(j,name))}
+function shiftEngWeek(days){
+ const pick=document.getElementById('engWeekPick');
+ const cur=hoursWeekRange(pick.value||localDateStr()).start;cur.setDate(cur.getDate()+days);
+ pick.value=localDateStr(cur);renderEngineers();
+}
+function pdfCompanyHeader(sub){return '<div class="company" style="display:flex;align-items:center;gap:12px"><img src="logo-header.png" alt="" style="height:52px;width:auto;flex-shrink:0"><div style="text-align:left"><strong>KEY ENGINEERING CHESTERFIELD LTD</strong><br>The Bungalow, Whittington Lane, Unstone, Dronfield, S18 4DQ<br>'+esc(sub)+'</div></div>'}
+function invoicePageHtml(j,c){
+ const h=x=>String(Math.round(x*100)/100);
+ const dates=[...new Set([j.date].concat((j.time||[]).map(t=>t.date)).filter(Boolean))].sort();
+ const when=dates.length>1?ukDate(dates[0])+' – '+ukDate(dates[dates.length-1]):ukDate(dates[0]||'');
+ const inv=normInvoice(j.invoice),rt=k=>rates[k]!=null?gbp(pence(rates[k])):'';
+ const rows=[];
+ if(c.M.nt>0)rows.push(['Normal time',h(c.M.nt)+' h'+hrsNote(c.T.nt,c.M.nt),rt('nt')+'/h',c.ntP]);
+ if(c.M.ot>0)rows.push(['Overtime 1',h(c.M.ot)+' h'+hrsNote(c.T.ot,c.M.ot),rt('ot')+'/h',c.otP]);
+ if(c.M.dt>0)rows.push(['Overtime 2',h(c.M.dt)+' h'+hrsNote(c.T.dt,c.M.dt),rt('dt')+'/h',c.dtP]);
+ if(c.M.mile>0)rows.push(['Mileage',h(c.M.mile)+' mi'+hrsNote(c.T.mile,c.M.mile,'mi'),rt('mile')+'/mi',c.mileP]);
+ if(c.callP>0)rows.push(['Call-out fee',String(c.callCrew)+(c.callCrew===1?' engineer':' engineers'),rt('callout'),c.callP]);
+ if(c.matMode==='sheet')materialsInfo(j).items.forEach(x=>rows.push(['Materials — '+x.desc,'','',pence(x.cost)]));
+ else if(c.matP!==null)rows.push(['Materials'+(inv.note?' — '+inv.note:''),'','',c.matP]);
+ const mats=(j.materials||[]).filter(x=>String(x).trim());
+ return '<div class="job-sheet" style="background-image:none">'+pdfCompanyHeader('Invoice details — ready to raise')
+  +'<div class="title" style="font-size:20px">INVOICE — JOB '+esc(j.job)+'</div>'
+  +'<table class="info"><tr><th>Customer</th><td colspan="3">'+esc(j.customer)+'</td></tr><tr><th>Site</th><td>'+esc(j.site)+'</td><th>Customer order no.</th><td>'+esc(j.order)+'</td></tr><tr><th>Date of work</th><td>'+esc(when)+'</td><th>Engineers</th><td>'+esc(uniqueEngineers(j.engineers).join(', '))+'</td></tr></table>'
+  +'<div class="section">DESCRIPTION OF WORK CARRIED OUT</div><div class="box" style="min-height:60px">'+esc(j.comments||'')+'</div>'
+  +(mats.length?'<div class="section">MATERIALS USED</div><div class="box" style="min-height:30px">'+mats.map(esc).join('<br>')+'</div>':'')
+  +'<div class="section">CHARGES</div><table class="invtable"><thead><tr><th>Description</th><th>Quantity</th><th class="r">Rate</th><th class="r">Amount</th></tr></thead><tbody>'
+  +rows.map(r=>'<tr><td>'+esc(r[0])+'</td><td>'+esc(r[1])+'</td><td class="r">'+esc(r[2])+'</td><td class="r">'+gbp(r[3])+'</td></tr>').join('')
+  +'<tr class="tot"><td colspan="3">Net</td><td class="r">'+gbp(c.net)+'</td></tr><tr><td colspan="3">VAT '+esc(String(rates.vat))+'%</td><td class="r">'+gbp(c.vatP)+'</td></tr><tr class="tot"><td colspan="3">TOTAL</td><td class="r">'+gbp(c.grossP)+'</td></tr></tbody></table>'
+  +'<div class="footer">Prepared '+esc(ukDate(localDateStr()))+' — Job '+esc(j.job)+' — Key Engineering Chesterfield LTD</div></div>';
+}
+function invoiceCoverHtml(name,s,e,ready,notReady){
+ const tot=ready.reduce((a,x)=>({net:a.net+x.c.net,vat:a.vat+x.c.vatP,gross:a.gross+x.c.grossP}),{net:0,vat:0,gross:0});
+ const rows=ready.map(x=>'<tr><td><b>'+esc(x.j.job)+'</b>'+(x.j.order?'<br>PO '+esc(x.j.order):'')+'</td><td>'+esc(x.j.customer)+'<br>'+esc(x.j.site)+'</td><td>'+esc(ukDate(lastWorked(x.j)))+'</td><td class="r">'+gbp(x.c.net)+'</td><td class="r">'+gbp(x.c.vatP)+'</td><td class="r"><b>'+gbp(x.c.grossP)+'</b></td></tr>').join('');
+ const skipped=notReady.length?'<div style="font-size:12px;margin-top:12px"><b>'+notReady.length+' job'+(notReady.length===1?'':'s')+' not included</b> — not ready yet:<br>'+notReady.map(x=>'Job '+esc(x.j.job)+' — '+esc(x.j.customer)+': '+esc(x.c.problems[0])).join('<br>')+'</div>':'';
+ return '<div class="job-sheet" style="background-image:none">'+pdfCompanyHeader('Invoices for the week')
+  +'<div class="title" style="font-size:20px">INVOICES — '+esc(name.toUpperCase())+'</div>'
+  +'<div style="margin:10px 2px;font-size:13px">Week starting '+esc(ukDate(s))+' (to '+esc(ukDate(e))+') · '+ready.length+' job'+(ready.length===1?'':'s')+' · prepared '+esc(ukDate(localDateStr()))+'</div>'
+  +'<table class="invtable"><thead><tr><th>Job / PO</th><th>Customer / site</th><th>Date</th><th class="r">Net</th><th class="r">VAT</th><th class="r">Total</th></tr></thead><tbody>'+rows
+  +'<tr class="tot"><td colspan="3">Total</td><td class="r">'+gbp(tot.net)+'</td><td class="r">'+gbp(tot.vat)+'</td><td class="r">'+gbp(tot.gross)+'</td></tr></tbody></table>'+skipped+'</div>';
+}
+function exportEngineerInvoicesAt(i){return exportEngineerInvoices(engineers[i],'engWeekPick')}
+function exportHoursEngineerInvoices(){return exportEngineerInvoices(hoursEngineerFilter,'hoursWeekPick')}
+async function exportEngineerInvoices(name,pickId){
+ if(!name){alert('Pick an engineer first.');return}
+ const btn=event&&event.target,orig=btn?btn.textContent:'';
+ if(btn){btn.disabled=true;btn.textContent='Generating…'}
+ let off=null;
+ try{
+  const libs=await window.pdfLibsReady;
+  if(!libs||!window.html2canvas||!window.jspdf){alert('Could not load the PDF tools — check your internet connection and try again.');return}
+  const{start,end}=hoursWeekRange(document.getElementById(pickId).value||localDateStr()),s=localDateStr(start),e=localDateStr(end);
+  const by=(a,b)=>(a.customer||'').toLowerCase().localeCompare((b.customer||'').toLowerCase())||lastWorked(a).localeCompare(lastWorked(b))||(a.job||'').localeCompare(b.job||'');
+  const rows=engineerInvoiceJobs(name,s,e).sort(by).map(j=>({j,c:jobCost(j,rates)}));
+  if(!rows.length){alert('There are no completed jobs waiting to be invoiced for '+name+' that week.');return}
+  const ready=rows.filter(x=>x.c.ready),notReady=rows.filter(x=>!x.c.ready);
+  if(!ready.length){alert('None of '+name+"'s jobs for that week are ready to invoice yet. Open Invoices, enter the materials costs and check the rates, then try again.");return}
+  off=document.createElement('div');off.style.cssText='position:fixed;left:-99999px;top:0;width:1000px';document.body.appendChild(off);
+  const{jsPDF}=window.jspdf,pdf=new jsPDF('p','mm','a4');
+  const snap=async html=>{off.innerHTML=html;await waitForImages(off);return{canvas:await html2canvas(off.firstElementChild,{scale:2,useCORS:true,backgroundColor:'#ffffff'}),root:off.firstElementChild}};
+  let pg=await snap(invoiceCoverHtml(name,s,e,ready,notReady));addFitPage(pdf,pg.canvas,false,pg.root);
+  for(const x of ready){pg=await snap(invoicePageHtml(x.j,x.c));addFitPage(pdf,pg.canvas,true,pg.root)}
+  const fname='Invoices - '+safeName(name)+' - Week starting '+safeName(ukDate(s))+'.pdf',blob=pdf.output('blob'),file=new File([blob],fname,{type:'application/pdf'});
+  const what=ready.length+' job'+(ready.length===1?'':'s');
+  if(navigator.canShare&&navigator.canShare({files:[file]})){await navigator.share({files:[file],title:fname,text:'Invoices / '+name+' / Week starting '+ukDate(s)+' ('+what+')'})}
+  else{
+   const url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download=fname;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),4000);
+   alert('Saved as "'+fname+'" ('+what+(notReady.length?', '+notReady.length+' not included — not ready yet':'')+'). In Files, choose "Save to OneDrive" and file it under:\nJob Sheets / '+name+' / Week starting '+ukDate(s));
+  }
+ }catch(err){if(!(err&&err.name==='AbortError'))alert('Could not create the invoices PDF: '+err.message)}
+ finally{if(off)off.remove();if(btn){btn.disabled=false;btn.textContent=orig}}
+}
+/* ---------------- quotes ---------------- */
+// A quote collects every job sheet that carries its quote number: hours, mileage, call-outs and materials are added up
+// automatically until the quote is completed. Those sheets are then invoiced from the quote, not one by one.
+const QUOTES_KEY='rkey_quotes';
+function normQuote(q){
+ q=q&&typeof q==='object'?q:{};const s=v=>typeof v==='string'?v:(v==null?'':String(v));
+ const qd=(q.quoted===''||q.quoted==null)?'':Number(q.quoted);
+ return{id:s(q.id)||('q'+Date.now().toString(36)+Math.random().toString(36).slice(2,6)),number:s(q.number).trim(),customer:s(q.customer),site:s(q.site),description:s(q.description).slice(0,500),
+  quoted:(qd===''||!isFinite(qd)||qd<0)?'':Math.round(qd*100)/100,status:q.status==='Complete'?'Complete':'Open',
+  created:s(q.created)||new Date().toISOString(),updatedAt:s(q.updatedAt)||s(q.created)||new Date().toISOString(),
+  completedOn:/^\d{4}-\d{2}-\d{2}$/.test(q.completedOn||'')?q.completedOn:'',snapshot:Array.isArray(q.snapshot)?q.snapshot.map(s):null};
+}
+let quotes=[];
+try{const a=JSON.parse(localStorage.getItem(QUOTES_KEY)||'[]');if(Array.isArray(a))quotes=a.filter(x=>x&&typeof x==='object').map(normQuote).filter(q=>q.number)}catch(e){quotes=[]}
+function saveQuotes(){try{localStorage.setItem(QUOTES_KEY,JSON.stringify(quotes))}catch(e){alert('Could not save the quotes — this device may be out of storage.')}}
+const quoteKey=n=>String(n||'').trim().toLowerCase();
+const jobKey=j=>(j.created||'')+'|'+j.job;
+function findQuote(n){const k=quoteKey(n);return k?quotes.find(q=>quoteKey(q.number)===k):undefined}
+function quoteOwnsJob(q,j){
+ if(quoteKey(j.quote)!==quoteKey(q.number))return false;
+ return q.status==='Open'||!!(q.snapshot&&q.snapshot.includes(jobKey(j))); // a completed quote keeps only the sheets that were on it when it was completed
+}
+function quoteOf(j){if(!j||!quoteKey(j.quote))return undefined;const q=findQuote(j.quote);return q&&quoteOwnsJob(q,j)?q:undefined}
+function quoteJobs(q){return jobs.filter(j=>quoteOwnsJob(q,j)).sort((a,b)=>lastWorked(a).localeCompare(lastWorked(b))||(a.job||'').localeCompare(b.job||''))}
+function quoteRow(j){const c=jobCost(j,rates);return{j,c,labour:c.ntP+c.otP+c.dtP,mile:c.mileP,call:c.callP,mat:c.matP||0}}
+function quoteSums(q){
+ const rows=quoteJobs(q).map(quoteRow),s={labour:0,mile:0,call:0,mat:0};
+ rows.forEach(r=>{s.labour+=r.labour;s.mile+=r.mile;s.call+=r.call;s.mat+=r.mat});
+ s.net=s.labour+s.mile+s.call+s.mat;s.vat=rates.vat==null?0:roundP(s.net*rates.vat/100);s.gross=s.net+s.vat;
+ return{rows,s};
+}
+function quoteMissing(q){const out=[];quoteJobs(q).forEach(j=>jobCost(j,rates).problems.forEach(p=>{if(/^(VAT|Nothing)/.test(p))return;if(out.indexOf(p)<0)out.push(p)}));return out}
+function quoteNumberChanged(){
+ const q=findQuote(document.getElementById('f_quote').value);if(!q)return;
+ if(!document.getElementById('f_customer').value.trim()&&q.customer){document.getElementById('f_customer').value=q.customer;if(!document.getElementById('f_site').value.trim())document.getElementById('f_site').value=q.site||''}
+}
+function completeQuote(q){
+ const snap=quoteJobs(q).map(jobKey); // taken while the quote is still open
+ q.status='Complete';q.completedOn=localDateStr();q.snapshot=snap;q.updatedAt=new Date().toISOString();saveQuotes();
+}
+function reopenQuote(q){q.status='Open';q.completedOn='';q.snapshot=null;q.updatedAt=new Date().toISOString();saveQuotes()}
+function afterSaveQuote(j){
+ const n=(j.quote||'').trim();if(!n)return;
+ const q=findQuote(n);
+ if(!q){
+  if(confirm('Quote '+n+' does not exist yet.\n\nCreate it for '+j.customer+'? Its hours, mileage, call-outs and materials will then be added up automatically.')){quotes.push(normQuote({number:n,customer:j.customer,site:j.site}));saveQuotes();setupLists()}
+  return;
+ }
+ if(q.status==='Complete'&&!quoteOwnsJob(q,j)){alert('Quote '+q.number+' is already complete, so this sheet has NOT been added to it. It will be invoiced as a normal job.\n\nIf it should be on the quote, reopen the quote under Quotes.');return}
+ if(q.status==='Open'&&j.status==='Complete'&&confirm('Job '+j.job+' is Complete.\n\nIs this the FINAL sheet for quote '+q.number+'?\n\nOK = complete the quote now.\nCancel = keep the quote open for more sheets.')){completeQuote(q);setupLists()}
+}
+function show(id){document.getElementById(id).classList.remove('hidden')}
+function quotesPage(){hide();show('quotes');renderQuotes()}
+function quoteCardHtml(q){
+ const{rows,s}=quoteSums(q),left=q.quoted===''?null:pence(q.quoted)-s.net;
+ return '<div class="jobrow"><div><b>Quote '+esc(q.number)+'</b> — '+esc(q.customer)+' <span class="pill">'+esc(q.status)+'</span>'
+  +'<div class="muted">'+esc(q.description||q.site||'')+'</div>'
+  +'<div class="muted">'+rows.length+' sheet'+(rows.length===1?'':'s')+' · cost so far '+gbp(s.net)+(q.quoted!==''?' · quoted '+gbp(pence(q.quoted))+' · '+(left>=0?gbp(left)+' left':'<b>OVER by '+gbp(-left)+'</b>'):'')+'</div></div>'
+  +'<div class="actions"><button onclick="openQuote(\''+esc(q.id)+'\')">Open</button></div></div>';
+}
+function renderQuotes(){
+ const open=quotes.filter(q=>q.status==='Open'),done=quotes.filter(q=>q.status==='Complete');
+ const by=(a,b)=>(b.updatedAt||'').localeCompare(a.updatedAt||'');
+ document.getElementById('quotesBody').innerHTML='<h2>Quotes</h2><div class="muted" style="margin-bottom:10px">Put the quote number on each job sheet and the hours, mileage, call-outs and materials are added to the quote automatically until it is completed.</div>'
+  +'<div class="actions" style="margin-bottom:10px"><button class="primary" onclick="newQuoteUi()">＋ New quote</button></div>'
+  +'<h3>Open ('+open.length+')</h3>'+(open.length?open.sort(by).map(quoteCardHtml).join(''):'<p class="muted">No open quotes.</p>')
+  +(done.length?'<h3>Completed ('+done.length+')</h3>'+done.sort(by).map(quoteCardHtml).join(''):'');
+}
+function newQuoteUi(){
+ const n=(prompt('Quote number:')||'').trim();if(!n)return;
+ if(findQuote(n)){alert('Quote '+n+' already exists.');return}
+ const c=(prompt('Customer:')||'').trim();
+ const q=normQuote({number:n,customer:c});quotes.push(q);saveQuotes();setupLists();openQuote(q.id);
+}
+let currentQuoteId=null;
+function openQuote(id){currentQuoteId=id;hide();show('quoteSheet');renderQuoteSheet()}
+function curQuote(){return quotes.find(q=>q.id===currentQuoteId)}
+function hoursText(c){const h=x=>String(Math.round(x*100)/100);return [c.M.nt>0?h(c.M.nt)+' h N/T':'',c.M.ot>0?h(c.M.ot)+' h O/T':'',c.M.dt>0?h(c.M.dt)+' h D/T':'',c.M.mile>0?h(c.M.mile)+' mi':'',c.callP>0?'call-out × '+c.callCrew:''].filter(Boolean).join(' · ')||'no hours'}
+function qsCostHtml(r){
+ const L=(k,p)=>'<div class="invline"><span class="k">'+k+'</span><span class="v">'+gbp(p)+'</span></div>';
+ return '<div class="muted" style="font-size:12px">'+esc(hoursText(r.c))+'</div>'+L('Labour',r.labour)+L('Mileage',r.mile)+L('Call-out',r.call)+L('Materials',r.mat)+'<div class="invtotal"><span>This sheet</span><span>'+gbp(r.labour+r.mile+r.call+r.mat)+'</span></div>';
+}
+function qsRowHtml(r,i){
+ const j=r.j,dates=[...new Set([j.date].concat((j.time||[]).map(t=>t.date)).filter(Boolean))].sort();
+ const when=dates.length>1?ukDate(dates[0])+' – '+ukDate(dates[dates.length-1]):ukDate(dates[0]||'');
+ const meta=['Job '+j.job,when,uniqueEngineers(j.engineers).join(', '),j.status,j.callout?'CALL-OUT':''].filter(Boolean).map(esc).join(' · ');
+ let mats='';
+ (j.materials||[]).forEach((d,mi)=>{if(!String(d).trim())return;mats+='<div class="row" style="margin:3px 0"><span style="flex:1;min-width:140px">'+esc(d)+'</span><input type="number" min="0" step="0.01" inputmode="decimal" style="width:110px" placeholder="Cost £" value="'+costOrBlank((j.materialCosts||[])[mi])+'" onchange="onQuoteMat('+i+','+mi+',this)"></div>'});
+ return '<div class="invcard"><div class="meta">'+meta+'</div>'+(mats?'<div class="invmat"><div class="muted" style="margin-bottom:4px"><b>Materials used</b> (cost is for the invoice only)</div>'+mats+'</div>':'')
+  +'<div id="qsc-'+i+'">'+qsCostHtml(r)+'</div><div class="actions" style="margin-top:6px"><button onclick="openQuoteJob('+i+')">Open sheet</button></div></div>';
+}
+function qsTotalsHtml(q){
+ const{s}=quoteSums(q),miss=quoteMissing(q);
+ const L=(k,p)=>'<div class="invline"><span class="k">'+k+'</span><span class="v">'+gbp(p)+'</span></div>';
+ let h=L('Labour',s.labour)+L('Mileage',s.mile)+L('Call-outs',s.call)+L('Materials',s.mat)+'<div class="invtotal"><span>Total so far (before VAT)</span><span>'+gbp(s.net)+'</span></div>';
+ if(rates.vat!=null)h+=L('VAT '+rates.vat+'%',s.vat)+'<div class="invline"><b>Total inc VAT</b><b>'+gbp(s.gross)+'</b></div>';
+ if(q.quoted!==''){const left=pence(q.quoted)-s.net;h+=L('Quoted price',pence(q.quoted))+'<div class="invline"><b>'+(left>=0?'Left in the quote':'OVER the quote by')+'</b><b>'+gbp(Math.abs(left))+'</b></div>'}
+ if(miss.length)h+='<div class="notice warn">Not fully costed: '+miss.map(esc).join('; ')+'</div>';
+ return h;
+}
+function renderQuoteSheet(){
+ const q=curQuote();if(!q){quotesPage();return}
+ const{rows}=quoteSums(q);window._qJobs=rows.map(r=>r.j);
+ const f=(id,l,v,extra)=>'<div><label>'+l+'</label><input id="'+id+'" value="'+esc(v)+'" '+(extra||'')+'></div>';
+ document.getElementById('quoteSheetBody').innerHTML='<button class="no-print" onclick="quotesPage()" style="margin-bottom:10px">← Back to Quotes</button>'
+  +'<h2>Quote '+esc(q.number)+' <span class="pill">'+esc(q.status)+'</span></h2>'
+  +(q.status==='Complete'?'<div class="muted" style="margin-bottom:8px">Completed '+esc(ukDate(q.completedOn))+'. Sheets entered after that are not added.</div>':'')
+  +'<div class="grid">'+f('qd_customer','Customer',q.customer)+f('qd_site','Site',q.site)+f('qd_desc','Description',q.description)+f('qd_quoted','Quoted price £ (optional)',q.quoted,'type="number" min="0" step="0.01" inputmode="decimal"')+'</div>'
+  +'<div class="actions" style="margin:8px 0"><button onclick="saveQuoteDetails()">Save details</button></div>'
+  +'<h3>Job sheets on this quote ('+rows.length+')</h3>'+(rows.length?rows.map(qsRowHtml).join(''):'<p class="muted">No job sheets yet. Type quote number <b>'+esc(q.number)+'</b> in the Quote No. box on a job sheet.</p>')
+  +'<div id="qsTotals" class="invcard">'+qsTotalsHtml(q)+'</div>'
+  +'<div class="actions" style="margin-top:10px"><button class="primary" onclick="exportQuotePdf(\'download\')">Download PDF</button><button onclick="exportQuotePdf(\'share\')">Share / Email PDF</button>'
+  +(q.status==='Open'?'<button onclick="completeQuoteUi()">✔ Complete quote</button>':'<button onclick="reopenQuoteUi()">Reopen quote</button>')+'<button class="danger" onclick="deleteQuoteUi()">Delete quote</button></div>';
+}
+function saveQuoteDetails(){
+ const q=curQuote();if(!q)return;
+ const raw=document.getElementById('qd_quoted').value.trim();
+ if(raw!==''&&!(isFinite(Number(raw))&&Number(raw)>=0)){alert('Please enter the quoted price as an amount, e.g. 5000');return}
+ q.customer=document.getElementById('qd_customer').value.trim();q.site=document.getElementById('qd_site').value.trim();q.description=document.getElementById('qd_desc').value.trim().slice(0,500);
+ q.quoted=raw===''?'':Math.round(Number(raw)*100)/100;q.updatedAt=new Date().toISOString();saveQuotes();
+ document.getElementById('qsTotals').innerHTML=qsTotalsHtml(q);
+}
+function onQuoteMat(ji,mi,el){
+ const q=curQuote(),j=(window._qJobs||[])[ji];if(!q||!j)return;
+ const raw=el.value.trim();let val='';
+ if(raw!==''){const n=Number(raw);if(!isFinite(n)||n<0){alert('Please enter the cost as an amount, e.g. 125.50');el.value=costOrBlank((j.materialCosts||[])[mi]);return}val=Math.round(n*100)/100}
+ const arr=normCosts(j.materialCosts,(j.materials||[]).length);arr[mi]=val;
+ j.materialCosts=cleanCosts(arr,(j.materials||[]).length);j.updatedAt=new Date().toISOString();saveJobsQuiet();
+ const c=document.getElementById('qsc-'+ji);if(c)c.innerHTML=qsCostHtml(quoteRow(j));
+ document.getElementById('qsTotals').innerHTML=qsTotalsHtml(q);
+}
+function openQuoteJob(i){const j=(window._qJobs||[])[i];if(j)openJob(j.job)}
+function completeQuoteUi(){
+ const q=curQuote();if(!q)return;const miss=quoteMissing(q);
+ if(!confirm('Complete quote '+q.number+'?\n\nThe '+quoteJobs(q).length+' job sheet(s) on it are locked in and invoiced from the quote. Sheets entered later will NOT be added.'+(miss.length?'\n\n⚠ Not fully costed yet: '+miss.join('; '):'')))return;
+ completeQuote(q);setupLists();renderQuoteSheet();
+}
+function reopenQuoteUi(){const q=curQuote();if(!q)return;if(!confirm('Reopen quote '+q.number+'? Every job sheet carrying its number will be added to it again.'))return;reopenQuote(q);setupLists();renderQuoteSheet()}
+function deleteQuoteUi(){
+ const q=curQuote();if(!q)return;
+ if(!confirm('Delete quote '+q.number+'?\n\nThe job sheets are not deleted, but they will go back to being invoiced one by one.'))return;
+ quotes=quotes.filter(x=>x!==q);saveQuotes();setupLists();quotesPage();
+}
+async function exportQuotePdf(mode){
+ const q=curQuote();if(!q)return;
+ const btn=event&&event.target,orig=btn?btn.textContent:'';
+ if(btn){btn.disabled=true;btn.textContent='Generating…'}
+ let off=null;
+ try{
+  const libs=await window.pdfLibsReady;
+  if(!libs||!window.html2canvas||!window.jspdf){alert('Could not load the PDF tools — check your internet connection and try again.');return}
+  const{rows,s}=quoteSums(q);
+  if(!rows.length){alert('There are no job sheets on this quote yet.');return}
+  const per=9,pages=Math.ceil(rows.length/per),title='Quote '+q.number+' — '+(q.customer||'');
+  off=document.createElement('div');off.style.cssText='position:fixed;left:-99999px;top:0;width:1000px';document.body.appendChild(off);
+  const{jsPDF}=window.jspdf;const pdf=new jsPDF('l','mm','a4');
+  for(let p=0;p<pages;p++){
+   const last=p===pages-1,chunk=rows.slice(p*per,(p+1)*per);
+   const foot=last?'<tr class="tot"><td colspan="7">Total — '+rows.length+' sheet'+(rows.length===1?'':'s')+'</td><td class="r">'+gbp(s.net)+'</td><td class="r">'+gbp(s.vat)+'</td><td class="r">'+gbp(s.gross)+'</td></tr>':'';
+   const notes=last?'<div style="font-size:12px;margin-top:10px">Labour '+gbp(s.labour)+' · Mileage '+gbp(s.mile)+' · Call-outs '+gbp(s.call)+' · Materials '+gbp(s.mat)+(q.quoted!==''?'<br><b>Quoted price '+gbp(pence(q.quoted))+' — '+(pence(q.quoted)-s.net>=0?gbp(pence(q.quoted)-s.net)+' left':'OVER by '+gbp(s.net-pence(q.quoted)))+'</b>':'')+(quoteMissing(q).length?'<br>Not fully costed: '+esc(quoteMissing(q).join('; ')):'')+'</div>':'';
+   off.innerHTML=invoicePdfPage(title,chunk.map(x=>invoicePdfRow(x.j,x.c)).join(''),foot,notes,p+1,pages,'Quote cost so far — from the job sheets on the quote');
+   await waitForImages(off);
+   const canvas=await html2canvas(off.firstElementChild,{scale:2,useCORS:true,backgroundColor:'#ffffff'});
+   addFitPage(pdf,canvas,p>0,off.firstElementChild);
+  }
+  const name='Quote '+safeName(q.number)+(q.customer?' - '+safeName(q.customer):'')+'.pdf',blob=pdf.output('blob'),file=new File([blob],name,{type:'application/pdf'});
+  if(mode==='share'&&navigator.canShare&&navigator.canShare({files:[file]})){await navigator.share({files:[file],title:name,text:title})}
+  else{const url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download=name;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),4000)}
+ }catch(e){if(!(e&&e.name==='AbortError'))alert('Could not create the PDF: '+e.message)}
+ finally{if(off)off.remove();if(btn){btn.disabled=false;btn.textContent=orig}}
+}
+
+function setHeaderHeight(){try{const h=document.querySelector('header');if(h)document.documentElement.style.setProperty('--hh',h.offsetHeight+'px')}catch(e){}}
+setHeaderHeight();window.addEventListener('resize',setHeaderHeight);window.addEventListener('load',setHeaderHeight);
 setupLists();renderJobs();setTimeout(initCanvases,100)
 let printParam=new URLSearchParams(location.search).get('print');
 if(printParam){
