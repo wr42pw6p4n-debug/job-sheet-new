@@ -1,5 +1,5 @@
-const CACHE = "rkey-job-manager-v9";
-const ASSETS = ["./", "./index.html", "./manifest.webmanifest", "./icon-192.png", "./icon-512.png", "./logo-header.png", "./watermark.png"];
+const CACHE = "rkey-job-manager-v10";
+const ASSETS = ["./", "./index.html", "./manifest.webmanifest", "./icon-192.png", "./icon-512.png", "./logo-header.png", "./watermark.png", "./header-bg.jpg"];
 
 // Live lookups (mileage). These must always go straight to the network: caching them would let a
 // single temporary error be replayed forever, and would fill the device with one-off answers.
