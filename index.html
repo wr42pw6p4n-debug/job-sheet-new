@@ -11,7 +11,7 @@
 <link rel="apple-touch-icon" href="icon-192.png">
 <style>
 *{box-sizing:border-box}body{margin:0;background:#eef1f4;color:#111;font-family:Arial,Helvetica,sans-serif}
-header{background:linear-gradient(rgba(23,35,45,.72),rgba(23,35,45,.72)),url(header-bg.jpg) center 42%/cover no-repeat,#17232d;color:#fff;padding:14px 18px;position:sticky;top:0;z-index:10}.head{max-width:1180px;margin:auto;display:flex;justify-content:space-between;align-items:center}
+header{background:linear-gradient(rgba(23,35,45,.6),rgba(23,35,45,.6)),url(header-bg.jpg) center 42%/cover no-repeat,#17232d;color:#fff;padding:14px 18px;position:sticky;top:0;z-index:10}.head{max-width:1180px;margin:auto;display:flex;justify-content:space-between;align-items:center}
 h1{font-size:20px;margin:0}.wrap{max-width:1180px;margin:auto;padding:15px}.nav{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px;position:sticky;top:var(--hh,56px);z-index:9;background:#eef1f4;padding:8px 0;box-shadow:0 6px 6px -6px rgba(0,0,0,.25)}
 button{border:1px solid #c4ccd2;border-radius:7px;background:#fff;padding:10px 14px;font-weight:700;cursor:pointer}.primary{background:#1769aa;color:#fff;border-color:#1769aa}.danger{background:#b42318;color:#fff;border-color:#b42318}
 .card{background:#fff;border-radius:10px;padding:16px;margin-bottom:14px;box-shadow:0 1px 5px #0002}.hidden{display:none}.muted{color:#68747d;font-size:12px}
@@ -22,7 +22,7 @@ hr{border:0;border-top:1px solid #d2d8dd;margin:18px 0}
 .sigcanvas{border:1px solid #222;border-radius:5px;background:#fff;width:100%;height:130px;touch-action:none}.sig-actions{margin-top:5px}
 .actions{display:flex;gap:7px;flex-wrap:wrap}.dashgrid{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin:10px 0}.dashcard{border:1px solid #d5dce1;border-radius:9px;padding:12px;background:#fff;cursor:pointer}.dashcard strong{display:block;font-size:24px;margin-top:3px}.dashcard small{color:#68747d}.attention{border-left:4px solid #c0392b}.backupbar{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}.stat{display:inline-block;background:#f5f7f8;border:1px solid #d7dde1;border-radius:7px;padding:8px 10px;margin:3px;font-size:12px}
 .job-sheet{max-width:1000px;margin:auto;background-color:#fff;background-image:url('watermark.png');background-repeat:no-repeat;background-position:center;background-size:auto 92%;-webkit-print-color-adjust:exact;print-color-adjust:exact;color:#000;padding:22px}
-.company{text-align:center;border:1px solid #111;padding:7px;font-size:10px;line-height:1.35}.company strong{font-size:14px}
+.company{text-align:center;border:1px solid #111;padding:7px;font-size:10px;line-height:1.35}.company{position:relative;overflow:hidden}.company>*{position:relative;z-index:1}.company>.hdrbg{position:absolute;top:0;left:0;right:0;bottom:0;z-index:0;background:url(header-bg.jpg) center 40%/cover no-repeat;opacity:.26}.company strong{font-size:14px}
 .title{border:2px solid #111;border-top:0;text-align:center;font-weight:bold;font-size:22px;padding:9px}
 .info{width:100%;border-collapse:collapse;margin-top:9px;font-size:11px}.info th,.info td{border:1px solid #111;padding:6px;vertical-align:top}.info th{background:#e8e8e8;text-align:left;width:18%}
 .hourstable{width:100%;border-collapse:collapse;margin-top:6px;font-size:14px}.hourstable th,.hourstable td{border:1px solid #d5dce1;padding:9px 10px;text-align:left}.hourstable th{background:#f2f5f7}
@@ -98,7 +98,7 @@ loadWithFallback(['https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.mi
 </script>
 </head>
 <body>
-<header class="no-print"><div class="head"><div style="display:flex;align-items:center;gap:10px"><img src="logo-header.png" alt="Key Engineering logo" style="height:38px;width:auto;flex-shrink:0"><h1>Key Engineering Chesterfield LTD — Job Manager <span style="font-size:11px;font-weight:400;opacity:.55">build 2026-10-11.2</span></h1></div><span id="counter"></span></div></header>
+<header class="no-print"><div class="head"><div style="display:flex;align-items:center;gap:10px"><img src="logo-header.png" alt="Key Engineering logo" style="height:38px;width:auto;flex-shrink:0"><h1>Key Engineering Chesterfield LTD — Job Manager <span style="font-size:11px;font-weight:400;opacity:.55">build 2026-10-11.3</span></h1></div><span id="counter"></span></div></header>
 <div class="wrap">
 <div class="nav no-print">
 <button class="primary" onclick="newJob()">＋ New Job</button><button onclick="home()">Jobs</button><button onclick="customersPage()">Customers</button><button onclick="engineersPage()">Engineers</button><button onclick="repairsPage()">🔧 Repairs</button><button onclick="invoicesPage()">🧾 Invoices</button><button onclick="quotesPage()">📝 Quotes</button>
@@ -701,7 +701,7 @@ function jobSheetHtml(j){
  let tr=(j.time||[]).map(r=>`<tr><td>${esc(ukDate(r.date))}</td><td>${esc(r.nt||'')}</td><td>${esc(r.ot||'')}</td><td>${esc(r.dt||'')}</td><td>${((+r.nt||0)+(+r.ot||0)+(+r.dt||0)).toFixed(2)}</td><td>${esc(r.mile||'')}</td><td>${esc(r.eid||(j.engineers||[]).join(', '))}</td></tr>`).join('');
  let mats=(j.materials||[]).map(x=>`<div>${esc(x)}</div>`).join('');
  return `<div class="job-sheet">
- <div class="company" style="display:flex;align-items:center;gap:12px">
+ <div class="company" style="display:flex;align-items:center;gap:12px"><div class="hdrbg"></div>
  <img src="logo-header.png" alt="Key Engineering logo" style="height:52px;width:auto;flex-shrink:0">
  <div style="text-align:left"><strong>KEY ENGINEERING CHESTERFIELD LTD</strong><br>The Bungalow, Whittington Lane, Unstone, Dronfield, S18 4DQ<br>
  Overhead Cranes & Hoists ● Runways & Gantries ● Lifting Beams & Jib Cranes ● Crane Conversions & Repairs<br>
@@ -867,7 +867,7 @@ function weeklyHoursSummaryHtml(engName,startStr,endStr){
  let t=computeEngineerWeekTotals(engName,startStr,endStr);
  let tot=t.nt+t.ot+t.dt;
  return `<div class="job-sheet">
- <div class="company" style="display:flex;align-items:center;gap:12px">
+ <div class="company" style="display:flex;align-items:center;gap:12px"><div class="hdrbg"></div>
  <img src="logo-header.png" alt="Key Engineering logo" style="height:52px;width:auto;flex-shrink:0">
  <div style="text-align:left"><strong>KEY ENGINEERING CHESTERFIELD LTD</strong></div>
  </div>
@@ -1403,7 +1403,7 @@ async function exportRepairsPdf(mode){
   if(!sel.items.length){alert('There are no repairs to list for this selection.');return}
   const title=sel.scope==='all'?'Outstanding Repairs':'Repairs Required — Week starting '+ukDate(sel.s);
   off=document.createElement('div');off.style.cssText='position:fixed;left:-99999px;top:0;width:1000px';document.body.appendChild(off);
-  off.innerHTML=`<div class="job-sheet" style="background-image:none"><div class="company" style="display:flex;align-items:center;gap:12px"><img src="logo-header.png" alt="" style="height:52px;width:auto;flex-shrink:0"><div style="text-align:left"><strong>KEY ENGINEERING CHESTERFIELD LTD</strong><br>Repairs required from completed inspection reports</div></div><div class="title" style="font-size:18px">${esc(title)}</div><div style="margin:8px 2px 4px;font-size:12px">Prepared ${esc(ukDate(localDateStr()))} · ${sel.items.length} item${sel.items.length===1?'':'s'}</div>${repairsListHtml(sel,false)}</div>`;
+  off.innerHTML=`<div class="job-sheet" style="background-image:none"><div class="company" style="display:flex;align-items:center;gap:12px"><div class="hdrbg"></div><img src="logo-header.png" alt="" style="height:52px;width:auto;flex-shrink:0"><div style="text-align:left"><strong>KEY ENGINEERING CHESTERFIELD LTD</strong><br>Repairs required from completed inspection reports</div></div><div class="title" style="font-size:18px">${esc(title)}</div><div style="margin:8px 2px 4px;font-size:12px">Prepared ${esc(ukDate(localDateStr()))} · ${sel.items.length} item${sel.items.length===1?'':'s'}</div>${repairsListHtml(sel,false)}</div>`;
   await waitForImages(off);
   const sheet=off.firstElementChild,top=sheet.getBoundingClientRect().top;
   const bounds=[...sheet.querySelectorAll('.repgroup,.repitem')].filter(el=>!(el.classList.contains('repitem')&&el.previousElementSibling&&el.previousElementSibling.tagName==='H4')).map(el=>el.getBoundingClientRect().top-top);
@@ -1702,7 +1702,7 @@ function invoicePdfRow(j,c){
  return '<tr><td><b>'+esc(j.job)+'</b>'+(j.order?'<br>PO '+esc(j.order):'')+'</td><td><b>'+esc(j.customer)+'</b><br>'+esc(j.site)+'<br>'+esc(ukDate(lastWorked(j)))+'</td><td>'+hours+'</td><td class="r">'+gbp(c.ntP+c.otP+c.dtP)+'</td><td class="r">'+(c.M.mile>0?h(c.M.mile)+' mi<br>'+gbp(c.mileP):'—')+'</td><td class="r">'+(c.callP?gbp(c.callP):'—')+'</td><td class="r">'+(c.matP==null?'—':gbp(c.matP))+'</td><td class="r">'+gbp(c.net)+'</td><td class="r">'+gbp(c.vatP)+'</td><td class="r"><b>'+gbp(c.grossP)+'</b></td></tr>';
 }
 function invoicePdfPage(title,rowsHtml,foot,notes,pageNo,pageCount,sub){
- return '<div class="job-sheet" style="background-image:none"><div class="company" style="display:flex;align-items:center;gap:12px"><img src="logo-header.png" alt="" style="height:52px;width:auto;flex-shrink:0"><div style="text-align:left"><strong>KEY ENGINEERING CHESTERFIELD LTD</strong><br>'+esc(sub||'Invoice worksheet — costed from completed job sheets')+'</div></div><div class="title" style="font-size:18px">'+esc(title)+'</div><div style="margin:8px 2px;font-size:12px;display:flex;justify-content:space-between"><span>Prepared '+esc(ukDate(localDateStr()))+'</span><span>Page '+pageNo+' of '+pageCount+'</span></div><table class="invtable"><thead><tr><th>Job / PO</th><th>Customer / site / date</th><th>Hours</th><th class="r">Labour</th><th class="r">Mileage</th><th class="r">Call-out</th><th class="r">Materials</th><th class="r">Net</th><th class="r">VAT</th><th class="r">Total</th></tr></thead><tbody>'+rowsHtml+foot+'</tbody></table>'+notes+'</div>';
+ return '<div class="job-sheet" style="background-image:none"><div class="company" style="display:flex;align-items:center;gap:12px"><div class="hdrbg"></div><img src="logo-header.png" alt="" style="height:52px;width:auto;flex-shrink:0"><div style="text-align:left"><strong>KEY ENGINEERING CHESTERFIELD LTD</strong><br>'+esc(sub||'Invoice worksheet — costed from completed job sheets')+'</div></div><div class="title" style="font-size:18px">'+esc(title)+'</div><div style="margin:8px 2px;font-size:12px;display:flex;justify-content:space-between"><span>Prepared '+esc(ukDate(localDateStr()))+'</span><span>Page '+pageNo+' of '+pageCount+'</span></div><table class="invtable"><thead><tr><th>Job / PO</th><th>Customer / site / date</th><th>Hours</th><th class="r">Labour</th><th class="r">Mileage</th><th class="r">Call-out</th><th class="r">Materials</th><th class="r">Net</th><th class="r">VAT</th><th class="r">Total</th></tr></thead><tbody>'+rowsHtml+foot+'</tbody></table>'+notes+'</div>';
 }
 const PDF_CHAR_MAP={'\u25cf':'-','\u2022':'-','\u2014':'-','\u2013':'-','\u2018':"'",'\u2019':"'",'\u201c':'"','\u201d':'"','\u2026':'...','\u00d7':'x','\u2192':'->','\u2190':'<-','\u00a0':' '};
 function pdfSafeText(s){
@@ -1804,7 +1804,7 @@ function shiftEngWeek(days){
  const cur=hoursWeekRange(pick.value||localDateStr()).start;cur.setDate(cur.getDate()+days);
  pick.value=localDateStr(cur);renderEngineers();
 }
-function pdfCompanyHeader(sub){return '<div class="company" style="display:flex;align-items:center;gap:12px"><img src="logo-header.png" alt="" style="height:52px;width:auto;flex-shrink:0"><div style="text-align:left"><strong>KEY ENGINEERING CHESTERFIELD LTD</strong><br>The Bungalow, Whittington Lane, Unstone, Dronfield, S18 4DQ<br>'+esc(sub)+'</div></div>'}
+function pdfCompanyHeader(sub){return '<div class="company" style="display:flex;align-items:center;gap:12px"><div class="hdrbg"></div><img src="logo-header.png" alt="" style="height:52px;width:auto;flex-shrink:0"><div style="text-align:left"><strong>KEY ENGINEERING CHESTERFIELD LTD</strong><br>The Bungalow, Whittington Lane, Unstone, Dronfield, S18 4DQ<br>'+esc(sub)+'</div></div>'}
 function invoicePageHtml(j,c){
  const h=x=>String(Math.round(x*100)/100);
  const dates=[...new Set([j.date].concat((j.time||[]).map(t=>t.date)).filter(Boolean))].sort();
