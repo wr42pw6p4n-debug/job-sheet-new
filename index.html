@@ -98,7 +98,7 @@ loadWithFallback(['https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.mi
 </script>
 </head>
 <body>
-<header class="no-print"><div class="head"><div style="display:flex;align-items:center;gap:10px"><img src="logo-header.png" alt="Key Engineering logo" style="height:38px;width:auto;flex-shrink:0"><h1>Key Engineering Chesterfield LTD — Job Manager <span style="font-size:11px;font-weight:400;opacity:.55">build 2026-10-11.4</span></h1></div><span id="counter"></span></div></header>
+<header class="no-print"><div class="head"><div style="display:flex;align-items:center;gap:10px"><img src="logo-header.png" alt="Key Engineering logo" style="height:38px;width:auto;flex-shrink:0"><h1>Key Engineering Chesterfield LTD — Job Manager <span style="font-size:11px;font-weight:400;opacity:.55">build 2026-10-12.1</span></h1></div><span id="counter"></span></div></header>
 <div class="wrap">
 <div class="nav no-print">
 <button class="primary" onclick="newJob()">＋ New Job</button><button onclick="home()">Jobs</button><button onclick="customersPage()">Customers</button><button onclick="engineersPage()">Engineers</button><button onclick="repairsPage()">🔧 Repairs</button><button onclick="invoicesPage()">🧾 Invoices</button><button onclick="quotesPage()">📝 Quotes</button>
@@ -462,6 +462,37 @@ function renderMaterials(){
  let matRowsEl=document.getElementById('matRows');
  matRowsEl.innerHTML=matRows.map((r,i)=>`<div style="margin-bottom:6px;display:flex;gap:6px;flex-wrap:wrap"><input style="flex:1;min-width:150px" placeholder="Description / Material Used" value="${esc(r.desc)}" onchange="matRows[${i}].desc=this.value"><input type="number" min="0" step="0.01" inputmode="decimal" style="width:110px" placeholder="Cost £" title="Invoice only — never printed on the job sheet" value="${esc(r.cost==null?'':r.cost)}" onchange="matRows[${i}].cost=this.value"><button class="danger" onclick="matRows.splice(${i},1);renderMaterials()">Remove</button></div>`).join('')+(matRows.length?'<div class="muted" style="font-size:12px;margin-bottom:6px">The cost is for the invoice only — it is never shown on the job sheet.</div>':'');
 }
+/* ---- signature images are stored small: a full-size canvas picture was ~25 KB each and filled the phone's storage ---- */
+function sigData(id){
+ const c=document.getElementById(id);
+ try{
+  const w=Math.min(900,c.width),h=Math.max(1,Math.round(c.height*w/c.width)),o=document.createElement('canvas');
+  o.width=w;o.height=h;o.getContext('2d').drawImage(c,0,0,w,h);return o.toDataURL('image/png');
+ }catch(e){return c.toDataURL()}
+}
+function compactSigUrl(url){
+ return new Promise(res=>{
+  try{
+   if(typeof url!=='string'||url.length<9000)return res(url);
+   const im=new Image();
+   im.onload=()=>{try{const w=Math.min(900,im.naturalWidth),h=Math.max(1,Math.round(im.naturalHeight*w/im.naturalWidth)),c=document.createElement('canvas');c.width=w;c.height=h;c.getContext('2d').drawImage(im,0,0,w,h);const out=c.toDataURL('image/png');res(out.length<url.length?out:url)}catch(e){res(url)}};
+   im.onerror=()=>res(url);im.src=url;
+  }catch(e){res(url)}
+ });
+}
+async function compactJobSigs(list){
+ let saved=0;
+ for(const j of list){for(const k of ['customerSig','engineerSig']){const u=j[k];if(u&&u.length>=9000){const n=await compactSigUrl(u);if(n.length<u.length){saved+=u.length-n.length;j[k]=n}}}}
+ return saved;
+}
+async function runSigCompaction(){
+ let done=null;try{done=localStorage.getItem('rkey_sig_compact_v1')}catch(e){}
+ if(done)return;
+ const saved=await compactJobSigs(jobs);
+ if(saved>0){try{localStorage.setItem('rkey_jobs',JSON.stringify(jobs))}catch(e){}}
+ try{localStorage.setItem('rkey_sig_compact_v1','1')}catch(e){}
+}
+function isQuotaError(e){return /quota/i.test(String(e&&((e.name||'')+' '+(e.message||''))))}
 function saveJob(){
  const v=id=>document.getElementById(id).value;
  let j={
@@ -470,8 +501,8 @@ function saveJob(){
   engineers:['e1','e2','e3','e4'].map(v).filter(Boolean),
   comments:v('f_comments'),defects:v('f_defects'),repairStatus:v('f_defects').trim()?v('f_repairStatus'):'',updatedAt:new Date().toISOString(),time:timeRows,materials:matRows.filter(x=>x.desc).map(x=>x.desc),materialCosts:cleanCosts(matRows.filter(x=>x.desc).map(x=>x.cost),matRows.filter(x=>x.desc).length),quote:v('f_quote').trim(),
   customerName:v('custName'),customerPosition:v('custPosition'),callout:calloutActive,
-  customerSig:document.getElementById('customerSig').toDataURL(),
-  engineerSig:document.getElementById('engineerSig').toDataURL(),
+  customerSig:sigData('customerSig'),
+  engineerSig:sigData('engineerSig'),
   created:new Date().toISOString()
  };
  if(!j.customer){alert('Please enter the customer/company.');return}
@@ -1229,14 +1260,15 @@ function applyMerge(d,incoming){
  if(clashes.length)msg+='\n\n⚠ Job number'+(clashes.length===1?'':'s')+' '+clashes.slice(0,10).join(', ')+(clashes.length>10?'…':'')+' now appear on more than one job — worth checking they are not duplicates.';
  return msg;
 }
-function revertFromSnapshot(){
- let raw=null;try{raw=localStorage.getItem(PRE_IMPORT_KEY)}catch(e){}
+function revertFromSnapshot(rawIn){
+ let raw=rawIn||null;if(!raw){try{raw=localStorage.getItem(PRE_IMPORT_KEY)}catch(e){}}
  if(!raw)return false;
  const d=JSON.parse(raw);
  jobs=(d.jobs||[]).map(normalizeJob);customers=d.customers||[];engineers=d.engineers||[];
  customerRecords=cleanCustomerRecords(d.customerRecords);deletedCustomers=d.deletedCustomers||[];
  quotes=(Array.isArray(d.quotes)?d.quotes:[]).filter(x=>x&&typeof x==='object').map(normQuote).filter(q=>q.number);
- persistAll();try{localStorage.removeItem(PRE_IMPORT_KEY)}catch(e){}
+ try{persistAll()}catch(e){/* memory is already back to how it was; the stored copy was never changed */}
+ try{localStorage.removeItem(PRE_IMPORT_KEY)}catch(e){}
  return true;
 }
 function undoImport(){
@@ -1256,15 +1288,22 @@ function importBackup(opts){
    const when=d.exportedAt&&!isNaN(new Date(d.exportedAt))?ukDate(localDateStr(new Date(d.exportedAt))):'unknown date';
    const mode=await askImportMode('Backup from '+when+' — '+incoming.length+' job'+(incoming.length===1?'':'s'));
    if(!mode)return;
-   let hadSnapshot=false;
-   try{localStorage.setItem(PRE_IMPORT_KEY,JSON.stringify(backupPayload()));hadSnapshot=true}catch(e){/* storage too full for an undo copy — carry on */}
+   try{await compactJobSigs(incoming);await compactJobSigs(jobs)}catch(e){} // shrink signature pictures first so there is room
+   let hadSnapshot=false,snapJson='',lostUndo=false;
+   try{localStorage.removeItem(PRE_IMPORT_KEY)}catch(e){}
+   try{snapJson=JSON.stringify(backupPayload());localStorage.setItem(PRE_IMPORT_KEY,snapJson);hadSnapshot=true}catch(e){/* storage too full for an undo copy — carry on */}
    try{
     const summary=mode==='replace'?applyReplace(d,incoming):applyMerge(d,incoming);
-    persistAll();setupLists();if(opts&&opts.invoices)invoicesPage();else home();alert(summary);
+    try{persistAll()}catch(e){
+     if(!isQuotaError(e))throw e;
+     try{localStorage.removeItem(PRE_IMPORT_KEY)}catch(x){}hadSnapshot=false;lostUndo=true; // free the undo copy to make room, then try once more
+     persistAll();
+    }
+    setupLists();if(opts&&opts.invoices)invoicesPage();else home();alert(summary+(lostUndo?'\n\nNote: this phone was nearly out of storage, so "Undo last import" is not available for this one.':''));
    }catch(e){
-    let restored=false;try{restored=hadSnapshot&&revertFromSnapshot()}catch(e2){}
+    let restored=false;try{restored=!!snapJson&&revertFromSnapshot(snapJson)}catch(e2){}
     setupLists();home();
-    alert('The import failed ('+e.message+').'+(restored?' Nothing has been changed.':' Please check your jobs before carrying on.'));
+    alert('The import could not be saved'+(isQuotaError(e)?' — this device is out of storage.':' ('+e.message+').')+(restored?' Nothing has been changed on this device.':' Please close and reopen the app, and check your jobs.'));
    }
   };
   r.readAsText(f);
@@ -2065,7 +2104,7 @@ async function exportQuotePdf(mode){
 
 function setHeaderHeight(){try{const h=document.querySelector('header');if(h)document.documentElement.style.setProperty('--hh',h.offsetHeight+'px')}catch(e){}}
 setHeaderHeight();window.addEventListener('resize',setHeaderHeight);window.addEventListener('load',setHeaderHeight);
-setupLists();renderJobs();setTimeout(initCanvases,100)
+setupLists();renderJobs();setTimeout(initCanvases,100);setTimeout(()=>{runSigCompaction().catch(()=>{})},2500)
 let printParam=new URLSearchParams(location.search).get('print');
 if(printParam){
  printLanding=true;
