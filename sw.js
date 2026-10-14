@@ -1,5 +1,5 @@
-const CACHE = "rkey-job-manager-v10";
-const ASSETS = ["./", "./index.html", "./manifest.webmanifest", "./icon-192.png", "./icon-512.png", "./logo-header.png", "./watermark.png", "./header-bg.jpg"];
+const CACHE = "rkey-job-manager-v12";
+const ASSETS = ["./", "./index.html", "./manifest.webmanifest", "./icon-192.png", "./icon-512.png", "./logo-header.png", "./watermark.png"];
 
 // Live lookups (mileage). These must always go straight to the network: caching them would let a
 // single temporary error be replayed forever, and would fill the device with one-off answers.
@@ -24,7 +24,8 @@ self.addEventListener("activate", event => {
 
 self.addEventListener("fetch", event => {
   if (event.request.method !== "GET") return;
-  if (LIVE_API_HOSTS.includes(new URL(event.request.url).hostname)) return; // straight to the network
+  const host = new URL(event.request.url).hostname;
+  if (LIVE_API_HOSTS.includes(host) || host.endsWith(".supabase.co")) return; // live data (mileage, cloud sync): straight to the network, never cached
 
   const isPage = event.request.mode === "navigate" || event.request.destination === "document";
   if (isPage) {
