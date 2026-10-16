@@ -1,4 +1,4 @@
-const CACHE = "rkey-job-manager-v12";
+const CACHE = "rkey-job-manager-v13";
 const ASSETS = ["./", "./index.html", "./manifest.webmanifest", "./icon-192.png", "./icon-512.png", "./logo-header.png", "./watermark.png"];
 
 // Live lookups (mileage). These must always go straight to the network: caching them would let a
