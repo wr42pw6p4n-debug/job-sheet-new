@@ -48,7 +48,7 @@ button[disabled]{opacity:.55;cursor:wait}
 .footer{margin-top:4px}}
 .filterchip{display:inline-flex;align-items:center;gap:8px;background:#e7f1fb;border:1px solid #b9d3ee;color:#0f4c81;border-radius:20px;padding:5px 6px 5px 12px;font-size:13px;font-weight:700;margin:6px 0}
 .filterchip button{padding:2px 9px;border-radius:14px;font-size:13px}
-.notice{border-radius:8px;padding:10px 12px;margin:8px 0;font-size:13px}.notice.warn{background:#fff4d6;border:1px solid #e5cf6b}.notice.ok{background:#e6f4ea;border:1px solid #a8d5b5}
+.notice{border-radius:8px;padding:10px 12px;margin:8px 0;font-size:13px}.notice.warn{background:#fff4d6;border:1px solid #e5cf6b}.notice.ok{background:#e6f4ea;border:1px solid #a8d5b5}.notice.bad{background:#fdecea;border:1px solid #e5a29a;color:#8a1c12}.hol-soon{background:#fff4d6}
 .notice button{padding:4px 10px;font-size:12px;margin-left:8px}
 .modalback{position:fixed;inset:0;background:#0007;z-index:50;display:flex;align-items:center;justify-content:center;padding:16px}
 .modalbox{background:#fff;border-radius:12px;max-width:460px;width:100%;padding:18px;box-shadow:0 8px 30px #0005}.modalbox h3{margin:0 0 8px}.modalbox p{margin:6px 0;font-size:14px}
@@ -98,10 +98,10 @@ loadWithFallback(['https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.mi
 </script>
 </head>
 <body>
-<header class="no-print"><div class="head"><div style="display:flex;align-items:center;gap:10px"><img src="logo-header.png" alt="Key Engineering logo" style="height:38px;width:auto;flex-shrink:0"><h1>Key Engineering Chesterfield LTD — Job Manager <span style="font-size:11px;font-weight:400;opacity:.55">build 2026-10-16.1</span></h1></div><span id="counter"></span></div></header>
+<header class="no-print"><div class="head"><div style="display:flex;align-items:center;gap:10px"><img src="logo-header.png" alt="Key Engineering logo" style="height:38px;width:auto;flex-shrink:0"><h1>Key Engineering Chesterfield LTD — Job Manager <span style="font-size:11px;font-weight:400;opacity:.55">build 2026-10-27.2</span></h1></div><span id="counter"></span></div></header>
 <div class="wrap">
 <div class="nav no-print">
-<button class="primary" onclick="newJob()">＋ New Job</button><button onclick="home()">Jobs</button><button onclick="customersPage()">Customers</button><button onclick="engineersPage()">Engineers</button><button onclick="repairsPage()">🔧 Repairs</button><button onclick="invoicesPage()">🧾 Invoices</button><button onclick="quotesPage()">📝 Quotes</button><button id="cloudBtn" onclick="cloudPanel()">☁ Sign in</button>
+<button class="primary" onclick="newJob()">＋ New Job</button><button onclick="home()">Jobs</button><button onclick="customersPage()">Customers</button><button onclick="engineersPage()">Engineers</button><button onclick="repairsPage()">🔧 Repairs</button><button onclick="invoicesPage()">🧾 Invoices</button><button onclick="quotesPage()">📝 Quotes</button><button onclick="holidaysPage()">🏖 Holidays</button><button id="cloudBtn" onclick="cloudPanel()">☁ Sign in</button>
 </div>
 
 <section id="home" class="card no-print">
@@ -206,6 +206,7 @@ loadWithFallback(['https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.mi
  <div id="hoursCardBody"></div>
 </div>
 </section>
+<section id="holidays" class="card no-print hidden"><h2>Holidays</h2><div id="holBody"></div></section>
 <section id="quotes" class="card hidden"><button class="no-print" onclick="home()" style="margin-bottom:10px">← Back to Jobs</button><div id="quotesBody"></div></section>
 <section id="quoteSheet" class="card hidden"><div id="quoteSheetBody"></div></section>
 <section id="invoices" class="card hidden">
@@ -406,7 +407,7 @@ function updateCalloutBtn(){
  btn.textContent=calloutActive?'⚡ Call-out ✓':'⚡ Call-out';
 }
 function esc(v){return String(v??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]))}
-function hide(){['home','form','customers','engineers','hours','repairs','invoices','quotes','quoteSheet','detail'].forEach(x=>document.getElementById(x).classList.add('hidden'))}
+function hide(){['home','form','customers','engineers','hours','repairs','invoices','quotes','holidays','quoteSheet','detail'].forEach(x=>document.getElementById(x).classList.add('hidden'))}
 function home(){window._jobFilterStatus=null;window._jobFilterDefects=false;window._jobFilterToday=false;window._showAllJobs=false;hide();document.getElementById('home').classList.remove('hidden');renderJobs()}
 function nextJob(){let n=jobs.map(j=>parseInt(j.job,10)).filter(Number.isFinite);return String((n.length?Math.max(...n):0)+1)}
 function setupLists(){customerOptions.innerHTML=customers.map(x=>`<option value="${esc(x)}"></option>`).join('');document.getElementById('quoteOptions').innerHTML=quotes.filter(q=>q.status==='Open').map(q=>`<option value="${esc(q.number)}">${esc(q.customer)}</option>`).join('');document.getElementById('engineerOptions').innerHTML=engineers.map(x=>`<option value="${esc(x)}"></option>`).join('');document.getElementById('f_type').innerHTML=types.map(x=>`<option>${esc(x)}</option>`).join('');
@@ -1002,11 +1003,29 @@ function waitForImages(container){
  let imgs=Array.from(container.querySelectorAll('img'));
  return Promise.all(imgs.map(img=>img.complete?Promise.resolve():new Promise(resolve=>{img.onload=resolve;img.onerror=resolve})));
 }
+/* ---- Weekly folders: file the merged PDF where the office can print it on Monday ----
+   One folder per engineer per week ending (Sunday). Pressing Merge again for the same week replaces it. */
+async function fileWeeklyJobSheetsForOffice(engName,weekEnding,blob,jobIds){
+ if(!sbSession||!sbSession.access_token)return{ok:false,why:'this device is not signed in to cloud sync'};
+ const key=((String(engName||'').trim().split(/\s+/)[0])||'unknown').toLowerCase().replace(/[^a-z0-9]/g,'')||'unknown';
+ const path=key+'/'+weekEnding+'/weekly-job-sheets.pdf';
+ let up;
+ try{up=await sbFetch('/storage/v1/object/weekly-job-sheets/'+path,{method:'POST',headers:{'Content-Type':'application/pdf','x-upsert':'true'},body:blob})}
+ catch(e){return{ok:false,why:'no signal or upload timed out'}}
+ if(!up.ok){let t='';try{t=(await up.json()).message||''}catch(e){}return{ok:false,why:'upload failed'+(t?': '+t:' ('+up.status+')')}}
+ const row={engineer:String(engName).trim(),engineer_key:key,week_ending:weekEnding,file_path:path,job_count:jobIds.length,job_ids:jobIds,
+  merged_at:new Date().toISOString(),printed_at:null,printed_by:null,processed_at:null,processed_by:null};
+ let r;
+ try{r=await sbFetch('/rest/v1/weekly_folders?on_conflict=engineer_key,week_ending',{method:'POST',headers:{Prefer:'resolution=merge-duplicates,return=minimal'},body:JSON.stringify(row)})}
+ catch(e){return{ok:false,why:'file uploaded but the folder entry timed out'}}
+ if(!r.ok)return{ok:false,why:'file uploaded but the folder entry failed ('+r.status+')'};
+ return{ok:true,path};
+}
 async function downloadWeeklyJobSheetsPdf(){
  if(!hoursEngineerFilter){alert('Pick an engineer from the Engineers page first.');return}
  let btn=event&&event.target;let originalLabel=btn?btn.textContent:'';
  if(btn){btn.disabled=true;btn.textContent='Generating…'}
- let offscreen=null;
+ let offscreen=null;let filedP=null;
  try{
   let ready=await window.pdfLibsReady;
   if(!ready||!window.html2canvas||!window.jspdf){alert('Could not load the PDF tools — check your internet connection and try again.');return}
@@ -1051,6 +1070,9 @@ async function downloadWeeklyJobSheetsPdf(){
 
   let filename='Weekly Job Sheets - '+safeName(hoursEngineerFilter)+' - Week starting '+safeName(ukDate(startStr))+'.pdf';
   let blob=pdf.output('blob');
+  // File a copy in the engineer's weekly folder for the office. Started now but NOT awaited, so the
+  // share / download below happens at exactly the same moment as before; the result is reported at the end.
+  filedP=fileWeeklyJobSheetsForOffice(hoursEngineerFilter,endStr,blob,matched.map(j=>String(j.job||''))).catch(e=>({ok:false,why:(e&&e.message)||'unknown error'}));
   let file=new File([blob],filename,{type:'application/pdf'});
   if(navigator.canShare&&navigator.canShare({files:[file]})){
    await navigator.share({files:[file],title:filename,text:'Job Sheets / '+hoursEngineerFilter+' / Week starting '+ukDate(startStr)+' (totals + '+matched.length+' job'+(matched.length===1?'':'s')+')'});
@@ -1065,6 +1087,12 @@ async function downloadWeeklyJobSheetsPdf(){
  }
  finally{
   if(offscreen)offscreen.remove();
+  if(filedP){
+   if(btn)btn.textContent='Filing for office…';
+   const fr=await filedP;
+   if(fr.ok){if(btn){btn.textContent='✓ Filed for office';await new Promise(z=>setTimeout(z,2500))}}
+   else alert('Your PDF is done, but it was NOT filed in the office folder ('+fr.why+').\nPress Merge Job Sheets again once you have signal and are signed in to cloud sync.');
+  }
   if(btn){btn.disabled=false;btn.textContent=originalLabel}
  }
 }
@@ -2228,6 +2256,127 @@ async function sbLogin(email,password){
  const d=await r.json().catch(()=>({}));
  if(!r.ok)throw new Error(r.status===400?'Email or password not recognised':(d.error_description||d.msg||d.message||'Could not sign in'));
  sbSetSession(d);
+}
+/* ---------------- Holidays: request form + team calendar (data lives in Supabase, approved in the Control Room) ----------------
+   25 days a year (1 Jan to 31 Dec) PLUS the 8 bank holidays. Weekends and bank holidays never count against the 25. */
+const HOL_DEFAULT_DAYS=25,HOL_CLASH_AT=2,HOL_FALLBACK=['Dave','Rob','Jono','Ricky','Martyn','Jordan','Ashleigh','Maxine'];
+let HOL={staff:[],bank:[],allow:{},reqs:[]};
+const holAdd=(s,n)=>{const d=new Date(s+'T00:00:00');d.setDate(d.getDate()+n);return localDateStr(d)};
+const holFmt=s=>new Date(s+'T00:00:00').toLocaleDateString('en-GB',{weekday:'short',day:'numeric',month:'short'});
+const holBankMap=()=>{const m={};HOL.bank.forEach(b=>{m[b.day]=b.name});return m};
+const holLive=()=>HOL.reqs.filter(r=>r.status==='approved'||r.status==='pending');
+const holIsWork=(s,bank)=>{const g=new Date(s+'T00:00:00').getDay();return g>0&&g<6&&!bank[s]};
+const holAllowFor=(n,y)=>{const v=HOL.allow[n+'|'+y];return v==null?HOL_DEFAULT_DAYS:v};
+const holStaffNames=()=>{const a=HOL.staff.filter(s=>s.active).sort((x,y)=>x.sort_order-y.sort_order).map(s=>s.name);return a.length?a:HOL_FALLBACK};
+function holWorkDays(r,bank,year){const out=[];for(let s=r.start_date;s<=r.end_date;s=holAdd(s,1)){if(year&&s.slice(0,4)!==String(year))continue;if(holIsWork(s,bank))out.push(s)}return out}
+const holDayCount=(r,bank,year)=>holWorkDays(r,bank,year).length*(r.half_day?0.5:1);
+function holOffByDay(from,to,bank){const m={};holLive().forEach(r=>{for(let s=r.start_date<from?from:r.start_date;s<=r.end_date&&s<=to;s=holAdd(s,1)){if(holIsWork(s,bank))(m[s]=m[s]||[]).push({staff:r.staff,status:r.status})}});return m}
+function holClashes(from,to){
+ const bank=holBankMap(),off=holOffByDay(from,to,bank),out=[];let prev=null;
+ Object.keys(off).sort().forEach(s=>{
+  const names=[...new Set(off[s].map(x=>x.staff))].sort();
+  if(names.length<HOL_CLASH_AT){prev=null;return}
+  const key=names.join('|');let n=holAdd(prev?prev.end:s,1);for(let i=0;prev&&i<14&&!holIsWork(n,bank);i++)n=holAdd(n,1);
+  if(prev&&prev.key===key&&n===s)prev.end=s;else{prev={start:s,end:s,names,key};out.push(prev)}
+ });
+ return out;
+}
+function holUsed(n,y){
+ const bank=holBankMap(),t=localDateStr(),o={taken:0,booked:0,pending:0};
+ HOL.reqs.filter(r=>r.staff===n&&(r.status==='approved'||r.status==='pending')).forEach(r=>{const f=r.half_day?0.5:1;holWorkDays(r,bank,y).forEach(s=>{if(r.status==='pending')o.pending+=f;else if(s<=t)o.taken+=f;else o.booked+=f})});
+ return o;
+}
+function holPreview(n,s,e,half){
+ if(!n||!s||!e||e<s)return{days:0,clash:[],over:[],ok:false,html:'<div class="muted">Choose your dates.</div>'};
+ const bank=holBankMap(),probe={start_date:s,end_date:e,half_day:half},days=holDayCount(probe,bank);
+ const off=holOffByDay(s,e,bank),clash=new Set();
+ holWorkDays(probe,bank).forEach(d=>{const others=[...new Set((off[d]||[]).filter(x=>x.staff!==n).map(x=>x.staff))];if(others.length>=HOL_CLASH_AT-1)others.forEach(o=>clash.add(o))});
+ const over=[],years=[...new Set(holWorkDays(probe,bank).map(d=>d.slice(0,4)))];
+ let balance='';
+ years.forEach((y,i)=>{const u=holUsed(n,+y),a=holAllowFor(n,+y),left=a-u.taken-u.booked-u.pending,mine=holDayCount(probe,bank,+y);if(mine>left)over.push(y);
+  if(i===0)balance='<div class="muted">'+esc(n)+' has <b>'+left+'</b> day'+(left===1?'':'s')+' left in '+y+' ('+a+' allowance'+(u.taken||u.booked?', '+(u.taken+u.booked)+' taken or booked':'')+(u.pending?', '+u.pending+' waiting for approval':'')+'). After this request: <b>'+(left-mine)+'</b>.</div>'});
+ let html='<div><b>'+days+' working day'+(days===1?'':'s')+'</b> <span class="muted">(weekends and bank holidays are not counted)</span></div>'+balance;
+ if(!days)html+='<div class="notice warn">Those dates are all weekends or bank holidays, so there is nothing to book.</div>';
+ if(clash.size)html+='<div class="notice bad">⚠ <b>Clash:</b> '+[...clash].map(esc).join(', ')+' '+(clash.size===1?'is':'are')+' already booked off on some of these days. You can still send it, the office will see the clash.</div>';
+ if(over.length)html+='<div class="notice warn">This is more than the days left in '+over.join(' and ')+'. The office will have to approve the extra.</div>';
+ return{days,clash:[...clash],over,ok:days>0,html};
+}
+async function holLoad(){
+ const get=async t=>{const r=await sbFetch('/rest/v1/'+t,{});if(!r.ok)throw new Error(t.split('?')[0]+' ('+r.status+')');return r.json()};
+ const [staff,bank,allow,reqs]=await Promise.all([get('holiday_staff?select=*&order=sort_order.asc'),get('bank_holidays?select=*&order=day.asc'),get('holiday_allowances?select=*'),get('holiday_requests?select=*&order=start_date.asc')]);
+ HOL={staff,bank,allow:{},reqs};allow.forEach(a=>{HOL.allow[a.staff+'|'+a.year]=+a.allowance});
+}
+async function holidaysPage(){
+ hide();show('holidays');
+ const box=document.getElementById('holBody');
+ if(!sbSession||!sbSession.access_token){box.innerHTML='<div class="notice warn">Sign in with the ☁ button at the top to request holiday and see the team calendar.</div><button class="primary" onclick="cloudPanel()">☁ Sign in</button>';return}
+ box.innerHTML='<div class="muted">Loading…</div>';
+ try{await holLoad();renderHolidays()}
+ catch(e){box.innerHTML='<div class="notice warn">Could not load holidays: '+esc(e.message)+'. Check your signal and try again.</div><button onclick="holidaysPage()">Retry</button>'}
+}
+function renderHolidays(msg){
+ const box=document.getElementById('holBody'),bank=holBankMap(),t=localDateStr(),names=holStaffNames();
+ let me='';try{me=localStorage.getItem('ke_hol_me')||''}catch(e){}
+ if(!names.includes(me))me=names[0];
+ const clashes=holClashes(t,holAdd(t,60));
+ const team=holLive().filter(r=>r.end_date>=t&&r.start_date<=holAdd(t,60)).sort((a,b)=>a.start_date.localeCompare(b.start_date));
+ const days=s=>Math.round((new Date(s+'T00:00:00')-new Date(t+'T00:00:00'))/864e5);
+ const range=r=>ukDate(r.start_date)+(r.end_date!==r.start_date?' to '+ukDate(r.end_date):'')+(r.half_day?' (half day)':'');
+ const pill=(txt,bg,fg)=>'<span class="pill" style="background:'+bg+';color:'+fg+'">'+txt+'</span>';
+ const stat=r=>r.status==='approved'?pill('APPROVED','#e6f4ea','#1e6b3a'):r.status==='pending'?pill('WAITING','#fff4d6','#8a5a00'):pill(esc(r.status.toUpperCase()),'#eceff1','#555');
+ box.innerHTML=
+  (msg?'<div class="notice ok">'+esc(msg)+'</div>':'')+
+  (clashes.length?'<div class="notice bad">⚠ <b>Holiday clashes coming up</b><br>'+clashes.map(c=>esc(holFmt(c.start))+(c.end!==c.start?' to '+esc(holFmt(c.end)):'')+': '+c.names.map(esc).join(', ')).join('<br>')+'</div>':'')+
+  '<h3>Request holiday</h3><div class="muted" style="margin-bottom:8px">'+HOL_DEFAULT_DAYS+' days a year (1 Jan to 31 Dec) plus the bank holidays. The office approves each request.</div>'+
+  '<div class="grid"><div><label>Who is it for?</label><select id="holWho">'+names.map(n=>'<option'+(n===me?' selected':'')+'>'+esc(n)+'</option>').join('')+'</select></div>'+
+  '<div><label>Note (optional)</label><input id="holNote" placeholder="e.g. family wedding"></div>'+
+  '<div><label>First day off</label><input id="holFrom" type="date"></div>'+
+  '<div><label>Last day off</label><input id="holTo" type="date"></div></div>'+
+  '<label style="display:flex;gap:8px;align-items:center;margin:10px 0"><input id="holHalf" type="checkbox" style="width:auto"> Half day (one day only)</label>'+
+  '<div id="holPreview" style="margin:8px 0"></div>'+
+  '<div class="actions"><button class="primary" id="holSend">Send request</button></div>'+
+  '<hr><h3>Team holidays coming up <span class="muted">next 60 days</span></h3>'+
+  (team.length?team.map(r=>{const d=days(r.start_date),soon=d>=0&&d<=14;return '<div class="jobrow'+(soon?' hol-soon':'')+'"><div><b>'+esc(r.staff)+'</b> — '+esc(range(r))+'<div class="muted">'+holDayCount(r,bank)+' day'+(holDayCount(r,bank)===1?'':'s')+(d<=0?' · off now':d<=14?' · starts in '+d+' day'+(d===1?'':'s'):'')+'</div></div><div>'+stat(r)+'</div></div>'}).join(''):'<div class="muted">Nobody is booked off in the next 60 days.</div>')+
+  '<hr><h3>Requests for <span id="holMeName"></span></h3><div id="holMine"></div>';
+ const who=document.getElementById('holWho'),from=document.getElementById('holFrom'),to=document.getElementById('holTo'),half=document.getElementById('holHalf'),send=document.getElementById('holSend');
+ const mine=()=>{
+  const n=who.value;document.getElementById('holMeName').textContent=n;
+  const list=HOL.reqs.filter(r=>r.staff===n&&r.end_date>=holAdd(t,-30)).sort((a,b)=>a.start_date.localeCompare(b.start_date));
+  document.getElementById('holMine').innerHTML=list.length?list.map(r=>'<div class="jobrow"><div>'+stat(r)+' <b>'+esc(range(r))+'</b><div class="muted">'+holDayCount(r,bank)+' day'+(holDayCount(r,bank)===1?'':'s')+(r.note?' · '+esc(r.note):'')+'</div></div>'+(r.status==='pending'?'<div class="actions"><button data-cancel="'+esc(r.id)+'">Cancel request</button></div>':'')+'</div>').join(''):'<div class="muted">No current requests.</div>';
+  document.querySelectorAll('#holMine button[data-cancel]').forEach(b=>b.onclick=()=>holCancel(b.dataset.cancel,b));
+ };
+ const prev=()=>{
+  half.disabled=!!(from.value&&to.value&&to.value!==from.value);if(half.disabled)half.checked=false;
+  const p=holPreview(who.value,from.value,to.value||from.value,half.checked);
+  document.getElementById('holPreview').innerHTML=p.html;send.disabled=!p.ok;
+ };
+ who.onchange=()=>{try{localStorage.setItem('ke_hol_me',who.value)}catch(e){}mine();prev()};
+ from.onchange=()=>{if(!to.value||to.value<from.value)to.value=from.value;prev()};
+ to.onchange=prev;half.onchange=prev;
+ send.onclick=async()=>{
+  const n=who.value,s=from.value,e=to.value||s,h=half.checked,p=holPreview(n,s,e,h);
+  if(!s||e<s){alert('Pick the first day, and a last day that is not before it.');return}
+  if(h&&s!==e){alert('A half day can only be one day.');return}
+  if(!p.ok)return;
+  if(p.clash.length&&!confirm('This clashes with '+p.clash.join(', ')+'. Send the request anyway?'))return;
+  send.disabled=true;send.textContent='Sending…';
+  try{
+   const r=await sbFetch('/rest/v1/holiday_requests',{method:'POST',headers:{Prefer:'return=minimal'},body:JSON.stringify({staff:n,start_date:s,end_date:e,half_day:h,note:document.getElementById('holNote').value.trim()||null})});
+   if(!r.ok){let m='';try{m=(await r.json()).message||''}catch(x){}throw new Error(m||'Could not send ('+r.status+')')}
+   await holLoad();renderHolidays('Request sent for '+n+': '+p.days+' working day'+(p.days===1?'':'s')+'. It shows as WAITING until the office approves it.');
+  }catch(err){alert('Could not send the request: '+err.message+'\nCheck your signal and try again.');send.disabled=false;send.textContent='Send request'}
+ };
+ mine();prev();
+}
+async function holCancel(id,btn){
+ if(!confirm('Cancel this holiday request?'))return;
+ btn.disabled=true;
+ try{
+  const r=await sbFetch('/rest/v1/holiday_requests?id=eq.'+encodeURIComponent(id),{method:'PATCH',headers:{Prefer:'return=representation'},body:JSON.stringify({status:'cancelled'})});
+  const rows=r.ok?await r.json():[];
+  if(!rows.length){alert('That request could not be cancelled here. Only the login that sent it can cancel it, so ask the office.');btn.disabled=false;return}
+  await holLoad();renderHolidays('Request cancelled.');
+ }catch(e){alert('Could not cancel: '+e.message);btn.disabled=false}
 }
 function docSig(s){let h=5381;for(let i=0;i<s.length;i++)h=((h<<5)+h+s.charCodeAt(i))|0;return s.length+':'+h}
 const _jobSigCache=new WeakMap();
