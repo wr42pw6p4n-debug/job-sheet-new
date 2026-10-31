@@ -2260,7 +2260,7 @@ async function sbLogin(email,password){
 /* ---------------- Holidays: request form + team calendar (data lives in Supabase, approved in the Control Room) ----------------
    25 days a year (1 Jan to 31 Dec) PLUS the 8 bank holidays. Weekends and bank holidays never count against the 25. */
 const HOL_DEFAULT_DAYS=25,HOL_CLASH_AT=2,HOL_FALLBACK=['Dave','Rob','Jono','Ricky','Martyn','Jordan','Ashleigh','Maxine'];
-let HOL={staff:[],bank:[],allow:{},reqs:[]};
+let HOL={staff:[],bank:[],allow:{},reqs:[],work:[]};
 const holAdd=(s,n)=>{const d=new Date(s+'T00:00:00');d.setDate(d.getDate()+n);return localDateStr(d)};
 const holFmt=s=>new Date(s+'T00:00:00').toLocaleDateString('en-GB',{weekday:'short',day:'numeric',month:'short'});
 const holBankMap=()=>{const m={};HOL.bank.forEach(b=>{m[b.day]=b.name});return m};
@@ -2283,28 +2283,35 @@ function holClashes(from,to){
 }
 function holUsed(n,y){
  const bank=holBankMap(),t=localDateStr(),o={taken:0,booked:0,pending:0};
- HOL.reqs.filter(r=>r.staff===n&&(r.status==='approved'||r.status==='pending')).forEach(r=>{const f=r.half_day?0.5:1;holWorkDays(r,bank,y).forEach(s=>{if(r.status==='pending')o.pending+=f;else if(s<=t)o.taken+=f;else o.booked+=f})});
+ HOL.reqs.filter(r=>r.staff===n&&!r.lieu&&(r.status==='approved'||r.status==='pending')).forEach(r=>{const f=r.half_day?0.5:1;holWorkDays(r,bank,y).forEach(s=>{if(r.status==='pending')o.pending+=f;else if(s<=t)o.taken+=f;else o.booked+=f})});
  return o;
 }
-function holPreview(n,s,e,half){
+function holLieu(n){
+ const bank=holBankMap();let earned=0,used=0;
+ HOL.work.filter(w=>w.staff===n).forEach(w=>{earned+=+w.days||0});
+ HOL.reqs.filter(r=>r.staff===n&&r.lieu&&(r.status==='approved'||r.status==='pending')).forEach(r=>{used+=holDayCount(r,bank)});
+ return{earned,used,left:earned-used};
+}
+function holPreview(n,s,e,half,lieu){
  if(!n||!s||!e||e<s)return{days:0,clash:[],over:[],ok:false,html:'<div class="muted">Choose your dates.</div>'};
  const bank=holBankMap(),probe={start_date:s,end_date:e,half_day:half},days=holDayCount(probe,bank);
  const off=holOffByDay(s,e,bank),clash=new Set();
  holWorkDays(probe,bank).forEach(d=>{const others=[...new Set((off[d]||[]).filter(x=>x.staff!==n).map(x=>x.staff))];if(others.length>=HOL_CLASH_AT-1)others.forEach(o=>clash.add(o))});
  const over=[],years=[...new Set(holWorkDays(probe,bank).map(d=>d.slice(0,4)))];
  let balance='';
- years.forEach((y,i)=>{const u=holUsed(n,+y),a=holAllowFor(n,+y),left=a-u.taken-u.booked-u.pending,mine=holDayCount(probe,bank,+y);if(mine>left)over.push(y);
+ if(lieu){const L=holLieu(n);if(days>L.left)over.push('lieu');balance='<div class="muted">'+esc(n)+' has <b>'+L.left+'</b> day'+(L.left===1?'':'s')+' in lieu left ('+L.earned+' earned for working bank holidays). After this request: <b>'+(L.left-days)+'</b>.</div>'}
+ else years.forEach((y,i)=>{const u=holUsed(n,+y),a=holAllowFor(n,+y),left=a-u.taken-u.booked-u.pending,mine=holDayCount(probe,bank,+y);if(mine>left)over.push(y);
   if(i===0)balance='<div class="muted">'+esc(n)+' has <b>'+left+'</b> day'+(left===1?'':'s')+' left in '+y+' ('+a+' allowance'+(u.taken||u.booked?', '+(u.taken+u.booked)+' taken or booked':'')+(u.pending?', '+u.pending+' waiting for approval':'')+'). After this request: <b>'+(left-mine)+'</b>.</div>'});
- let html='<div><b>'+days+' working day'+(days===1?'':'s')+'</b> <span class="muted">(weekends and bank holidays are not counted)</span></div>'+balance;
+ let html='<div><b>'+days+' working day'+(days===1?'':'s')+(lieu?' in lieu':'')+'</b> <span class="muted">(weekends and bank holidays are not counted)</span></div>'+balance;
  if(!days)html+='<div class="notice warn">Those dates are all weekends or bank holidays, so there is nothing to book.</div>';
  if(clash.size)html+='<div class="notice bad">⚠ <b>Clash:</b> '+[...clash].map(esc).join(', ')+' '+(clash.size===1?'is':'are')+' already booked off on some of these days. You can still send it, the office will see the clash.</div>';
- if(over.length)html+='<div class="notice warn">This is more than the days left in '+over.join(' and ')+'. The office will have to approve the extra.</div>';
+ if(over.length)html+=lieu?'<div class="notice warn">That is more days in lieu than have been recorded for '+esc(n)+'. The office will have to approve the extra.</div>':'<div class="notice warn">This is more than the days left in '+over.join(' and ')+'. The office will have to approve the extra.</div>';
  return{days,clash:[...clash],over,ok:days>0,html};
 }
 async function holLoad(){
  const get=async t=>{const r=await sbFetch('/rest/v1/'+t,{});if(!r.ok)throw new Error(t.split('?')[0]+' ('+r.status+')');return r.json()};
- const [staff,bank,allow,reqs]=await Promise.all([get('holiday_staff?select=*&order=sort_order.asc'),get('bank_holidays?select=*&order=day.asc'),get('holiday_allowances?select=*'),get('holiday_requests?select=*&order=start_date.asc')]);
- HOL={staff,bank,allow:{},reqs};allow.forEach(a=>{HOL.allow[a.staff+'|'+a.year]=+a.allowance});
+ const [staff,bank,allow,reqs,work]=await Promise.all([get('holiday_staff?select=*&order=sort_order.asc'),get('bank_holidays?select=*&order=day.asc'),get('holiday_allowances?select=*'),get('holiday_requests?select=*&order=start_date.asc'),get('bank_holiday_work?select=*').catch(()=>[])]);
+ HOL={staff,bank,allow:{},reqs,work};allow.forEach(a=>{HOL.allow[a.staff+'|'+a.year]=+a.allowance});
 }
 async function holidaysPage(){
  hide();show('holidays');
@@ -2321,7 +2328,7 @@ function renderHolidays(msg){
  const clashes=holClashes(t,holAdd(t,60));
  const team=holLive().filter(r=>r.end_date>=t&&r.start_date<=holAdd(t,60)).sort((a,b)=>a.start_date.localeCompare(b.start_date));
  const days=s=>Math.round((new Date(s+'T00:00:00')-new Date(t+'T00:00:00'))/864e5);
- const range=r=>ukDate(r.start_date)+(r.end_date!==r.start_date?' to '+ukDate(r.end_date):'')+(r.half_day?' (half day)':'');
+ const range=r=>ukDate(r.start_date)+(r.end_date!==r.start_date?' to '+ukDate(r.end_date):'')+(r.half_day?' (half day)':'')+(r.lieu?' (day in lieu)':'');
  const pill=(txt,bg,fg)=>'<span class="pill" style="background:'+bg+';color:'+fg+'">'+txt+'</span>';
  const stat=r=>r.status==='approved'?pill('APPROVED','#e6f4ea','#1e6b3a'):r.status==='pending'?pill('WAITING','#fff4d6','#8a5a00'):pill(esc(r.status.toUpperCase()),'#eceff1','#555');
  box.innerHTML=
@@ -2333,12 +2340,13 @@ function renderHolidays(msg){
   '<div><label>First day off</label><input id="holFrom" type="date"></div>'+
   '<div><label>Last day off</label><input id="holTo" type="date"></div></div>'+
   '<label style="display:flex;gap:8px;align-items:center;margin:10px 0"><input id="holHalf" type="checkbox" style="width:auto"> Half day (one day only)</label>'+
+  '<label style="display:flex;gap:8px;align-items:center;margin:10px 0"><input id="holLieu" type="checkbox" style="width:auto"> Take a day in lieu (for a bank holiday worked) <span class="muted" id="holLieuLeft"></span></label>'+
   '<div id="holPreview" style="margin:8px 0"></div>'+
   '<div class="actions"><button class="primary" id="holSend">Send request</button></div>'+
   '<hr><h3>Team holidays coming up <span class="muted">next 60 days</span></h3>'+
   (team.length?team.map(r=>{const d=days(r.start_date),soon=d>=0&&d<=14;return '<div class="jobrow'+(soon?' hol-soon':'')+'"><div><b>'+esc(r.staff)+'</b> — '+esc(range(r))+'<div class="muted">'+holDayCount(r,bank)+' day'+(holDayCount(r,bank)===1?'':'s')+(d<=0?' · off now':d<=14?' · starts in '+d+' day'+(d===1?'':'s'):'')+'</div></div><div>'+stat(r)+'</div></div>'}).join(''):'<div class="muted">Nobody is booked off in the next 60 days.</div>')+
   '<hr><h3>Requests for <span id="holMeName"></span></h3><div id="holMine"></div>';
- const who=document.getElementById('holWho'),from=document.getElementById('holFrom'),to=document.getElementById('holTo'),half=document.getElementById('holHalf'),send=document.getElementById('holSend');
+ const who=document.getElementById('holWho'),from=document.getElementById('holFrom'),to=document.getElementById('holTo'),half=document.getElementById('holHalf'),lieuBox=document.getElementById('holLieu'),send=document.getElementById('holSend');
  const mine=()=>{
   const n=who.value;document.getElementById('holMeName').textContent=n;
   const list=HOL.reqs.filter(r=>r.staff===n&&r.end_date>=holAdd(t,-30)).sort((a,b)=>a.start_date.localeCompare(b.start_date));
@@ -2347,21 +2355,21 @@ function renderHolidays(msg){
  };
  const prev=()=>{
   half.disabled=!!(from.value&&to.value&&to.value!==from.value);if(half.disabled)half.checked=false;
-  const p=holPreview(who.value,from.value,to.value||from.value,half.checked);
+  const L=holLieu(who.value);document.getElementById('holLieuLeft').textContent='('+L.left+' available)';const p=holPreview(who.value,from.value,to.value||from.value,half.checked,lieuBox.checked);
   document.getElementById('holPreview').innerHTML=p.html;send.disabled=!p.ok;
  };
  who.onchange=()=>{try{localStorage.setItem('ke_hol_me',who.value)}catch(e){}mine();prev()};
  from.onchange=()=>{if(!to.value||to.value<from.value)to.value=from.value;prev()};
- to.onchange=prev;half.onchange=prev;
+ to.onchange=prev;half.onchange=prev;lieuBox.onchange=prev;
  send.onclick=async()=>{
-  const n=who.value,s=from.value,e=to.value||s,h=half.checked,p=holPreview(n,s,e,h);
+  const n=who.value,s=from.value,e=to.value||s,h=half.checked,li=lieuBox.checked,p=holPreview(n,s,e,h,li);
   if(!s||e<s){alert('Pick the first day, and a last day that is not before it.');return}
   if(h&&s!==e){alert('A half day can only be one day.');return}
   if(!p.ok)return;
   if(p.clash.length&&!confirm('This clashes with '+p.clash.join(', ')+'. Send the request anyway?'))return;
   send.disabled=true;send.textContent='Sending…';
   try{
-   const r=await sbFetch('/rest/v1/holiday_requests',{method:'POST',headers:{Prefer:'return=minimal'},body:JSON.stringify({staff:n,start_date:s,end_date:e,half_day:h,note:document.getElementById('holNote').value.trim()||null})});
+   const r=await sbFetch('/rest/v1/holiday_requests',{method:'POST',headers:{Prefer:'return=minimal'},body:JSON.stringify({staff:n,start_date:s,end_date:e,half_day:h,lieu:li,note:document.getElementById('holNote').value.trim()||null})});
    if(!r.ok){let m='';try{m=(await r.json()).message||''}catch(x){}throw new Error(m||'Could not send ('+r.status+')')}
    await holLoad();renderHolidays('Request sent for '+n+': '+p.days+' working day'+(p.days===1?'':'s')+'. It shows as WAITING until the office approves it.');
   }catch(err){alert('Could not send the request: '+err.message+'\nCheck your signal and try again.');send.disabled=false;send.textContent='Send request'}
